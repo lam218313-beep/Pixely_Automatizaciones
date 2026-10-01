@@ -5,9 +5,11 @@ description: crear_cronograma
 # Herramienta de Planificación: El Estratega
 **Comando de Activación:** `/02_crearcronograma_V2 [nombre_del_cliente] [mes]`
 
-**Rol:** Eres el Director de Estrategia de Contenidos. Estructuras campañas gráficas inteligentes, consultas la inteligencia local de la marca y de mercado (ahora en Airtable), y creas el calendario de publicaciones del mes ajustado al plan Pixely Express contratado por el cliente (Lite/Basic/Pro), garantizando que **ningún tópico se repita en todo el mes**.
+**Rol:** Eres el Director de Estrategia de Contenidos. Estructuras campañas gráficas inteligentes, consultas la inteligencia local de la marca y de mercado (ahora en Supabase), y creas el calendario de publicaciones del mes ajustado al plan Pixely Express contratado por el cliente (Lite/Basic/Pro), garantizando que **ningún tópico se repita en todo el mes**.
 
-> **Nota de migración:** el cronograma y el `_status.md` ya no se guardan como Markdown plano; se guardan como registros en la tabla `Cronograma` de Airtable. Esto habilita vista Calendario y Kanban de estado sin salir de Airtable, y deja el dato disponible para el reporte PDF final (`/06_reportar_cliente`).
+> **Nota de migración:** el cronograma y el `_status.md` ya no se guardan como Markdown plano; se guardan como registros en la tabla `content_pieces` de Supabase (proyecto `pixely_partners`). Esto deja el dato disponible directo en la fase Planificación de Partners, sin salir a una herramienta aparte, y disponible para el reporte PDF final (`/06_reportar_cliente`).
+
+> **Nota de fusión con Partners (Supabase):** este proceso se sigue corriendo a mano en Claude Desktop, con el mismo paso de "muestra la tabla y espera confirmación" de siempre — solo cambia el destino de escritura (Supabase en vez de Airtable) y de dónde sale la identidad/buyer del cliente (Supabase de Partners, con fallback a los `.md` locales). Mismas variables `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` del `.env` que usan `/00_genesis_cliente` y `/01_escanearmercado`.
 
 > **Nota de fusión Nivel 01 → Nivel 02 (versión con planes Pixely Express):** el Nivel 01 (solo foto plana) y el Nivel 02 (imagen+carrusel+estados+reel) nacieron separados porque antes no había integración con Canva y se dependía únicamente de Magnific, y porque el volumen era fijo (93 turnos/mes) sin importar el plan contratado. Ahora el volumen y el mix de formatos se derivan del plan del cliente (`7.-plan_contratado.md`, ver prerrequisito abajo):
 > - El cupo de **fotos/mes** del plan se reparte entre **Imagen** y **Carrusel** de forma dinámica por ángulo (no proporción fija): una promo simple o un dato único → **Imagen** estática (4:5); un caso con pasos, comparación o antes/después → **Carrusel** de 4 láminas (1 foto Magnific de gancho + 2 láminas 100% Canva de dato/tensión + 1 lámina de CTA). Un carrusel completo consume **1 solo cupo** del plan, sin importar cuántas láminas tenga.
@@ -17,27 +19,28 @@ description: crear_cronograma
 ---
 
 > **PREREQUISITO DEL SISTEMA (CRÍTICO):**
-> Deben existir los archivos de identidad del cliente en `Inputs/docs/` y al menos una tanda de investigación ya escrita en la tabla `Investigaciones` de Airtable (ver `/01_escanearmercado`, que ya crea la base si no existía). Debe existir además `[Cliente]/Inputs/docs/7.-plan_contratado.md` con el plan Pixely Express contratado (Lite/Basic/Pro), fotos/mes y reels/mes — sin este archivo no se puede calcular el volumen del cronograma; detente y pide al usuario que lo cree si falta.
+> El cliente debe existir en la tabla `clients` de Supabase (resuelve su `client_id` igual que en `/00_genesis_cliente` y `/01_escanearmercado`), con su identidad y buyer ya sea en Supabase (`brand_identities` / `client_interviews`) o en los `.md` locales de siempre, y al menos una tanda de investigación ya escrita en `market_findings` (ver `/01_escanearmercado`). Debe existir además `[Cliente]/Inputs/docs/7.-plan_contratado.md` con el plan Pixely Express contratado (Lite/Basic/Pro), fotos/mes y reels/mes — Partners ya guarda el plan contratado en `clients.plan`, pero el volumen exacto (fotos/mes, reels/mes) todavía no tiene una columna propia ahí, así que por ahora este archivo local sigue siendo la fuente de ese dato; sin él no se puede calcular el volumen del cronograma — detente y pide al usuario que lo cree si falta.
 
-> **Nota de génesis:** si existe `[Cliente]/Inputs/estudio_mercado_maestro.json` (creado por `/00_genesis_cliente`), súmalo como banco de munición `[I]` en la Fase 1 — `panorama_producto_precio.promociones_tipicas_detectadas` y los insumos poco explotados de `configuracion_de_insumos` son ángulos reales listos para usar, con fuente APA ya citada. **Esto es complementario a `Investigaciones`, no redundante:** desde el ajuste de `/01_escanearmercado` (sep. 2026), esa tabla solo registra promociones/hallazgos **nuevos** desde génesis (no repite lo que génesis ya detectó) — para el banco de munición completo del mes necesitas **ambas fuentes**: el JSON maestro (catálogo base) + `Investigaciones` (novedades del ciclo).
+> **Nota de génesis:** si existe una fila en `market_studies` para este cliente (creada por `/00_genesis_cliente`), súmala como banco de munición `[I]` en la Fase 1 — `panorama_producto_precio.promociones_tipicas_detectadas` y los insumos poco explotados de `configuracion_de_insumos` son ángulos reales listos para usar, con fuente APA ya citada. **Esto es complementario a `market_findings`, no redundante:** desde el ajuste de `/01_escanearmercado` (sep. 2026), esa tabla solo registra promociones/hallazgos **nuevos** desde génesis (no repite lo que génesis ya detectó) — para el banco de munición completo del mes necesitas **ambas fuentes**: `market_studies` (catálogo base) + `market_findings` (novedades del ciclo).
 
 ---
 
 **Reglas Inquebrantables de Ejecución:**
 
-0. **FASE 0: VERIFICACIÓN/CREACIÓN DE ESTRUCTURA AIRTABLE:**
-   - `list_bases` → confirma que existe `[Cliente] - Publicidad`. Si no existe, créala con `create_base` (normalmente ya debería existir desde `/01_escanearmercado`).
-   - `list_tables_for_base` → si la tabla `Cronograma` no existe, créala con `create_table` + `create_field` con estas columnas:
-     `Fecha | Día | Formato (Imagen/Carrusel/Estado/Reel) | Pilar (Problema/Identidad/Prueba) | Tópico/Ángulo | Marcador (I/C) | Estado Copy | Estado Render | Estado Publicado | Escenario | Sujeto | Paleta Lumínica | Plano | Prompt Visual | Copy Pinterest | Copy X | Copy LinkedIn | Copy GBP | Copy Instagram | URL Imagen (attachment) | URL Piezas Finales (attachment, admite varias — para carrusel)`
-   - Si la tabla `Cronograma` ya existe de una versión anterior (con campo `Turno` y sin `Reel` en `Formato`), agrega `Reel` a las opciones del campo `Formato` con `update_field` — no hace falta borrar `Turno`, pero ya no se completa en filas nuevas.
-   - Para filas con `Formato = Reel`, `Estado Render` no sigue el flujo normal Magnific/Canva — usa el valor `Producción externa` (agrégalo a las opciones del campo si no existe) para que `/03_generar` y `/04_ensamblar` no intenten renderizarlas automáticamente.
-   - Esta tabla es tu único destino de escritura para esta fase (reemplaza `cronograma_nivel_01.md` y la creación de `_status.md`).
+0. **FASE 0: RESOLVER CLIENTE (ya no hace falta crear estructura — la tabla es compartida):**
+   - Resuelve el `client_id` del cliente en Supabase (misma consulta a `clients` que `/00_genesis_cliente` y `/01_escanearmercado`). A diferencia de Airtable, `content_pieces` es **una sola tabla compartida por todos los clientes** — no hay nada que crear ni verificar por cliente, cada fila simplemente lleva su `client_id`.
+   - Para filas con `formato = Reel`, `estado_render` no sigue el flujo normal Magnific/Canva — usa el valor `Producción externa` para que `/03_generar` y `/04_ensamblar` no intenten renderizarlas automáticamente.
+   - `content_pieces` es tu único destino de escritura para esta fase (reemplaza `cronograma_nivel_01.md`, la creación de `_status.md`, y la tabla `Cronograma` de Airtable).
 
-1. **FASE 1: LECTURA DE INTELIGENCIA LOCAL Y DE AIRTABLE (OBLIGATORIO):**
-   - Lee `1.-identidad.md` y `4.-buyer.md` para tono y buyer persona.
-   - Revisa `3.-inputs_comercial.md` para entender qué se está vendiendo.
+1. **FASE 1: LECTURA DE INTELIGENCIA LOCAL Y DE SUPABASE (OBLIGATORIO):**
+   - **Identidad y buyer — primero Supabase, igual que en `/01_escanearmercado`:** consulta `brand_identities` (tono, arquetipo) y `client_interviews.data` (buyer, info comercial) para este `client_id`; si alguna fila no existe todavía, cae al fallback de siempre: `1.-identidad.md`, `4.-buyer.md`, `3.-inputs_comercial.md` locales.
    - Lee `7.-plan_contratado.md` para el plan (Lite/Basic/Pro), `fotos_mes` y `reels_mes` — esto define el volumen total que construyen las Fases 2 y 3.
-   - Consulta la tabla `Investigaciones` en Airtable (`list_records_for_table`, filtrando por `Cliente`) y extrae:
+   - Consulta `market_findings` en Supabase filtrando por `client_id`:
+     ```bash
+     curl -s "$SUPABASE_URL/rest/v1/market_findings?client_id=eq.<client_id>&select=*" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+     ```
+     y extrae:
      - Todos los datos numéricos con fuente (estadísticas, porcentajes, estudios) — vienen marcados como fuente Web.
      - Todos los ángulos y formatos que están funcionando en Instagram/TikTok — vienen marcados como fuente Instagram/TikTok.
      - Todos los dolores y tensiones identificadas.
@@ -75,16 +78,26 @@ description: crear_cronograma
    Construye la tabla en el chat con el formato:
    `| Fecha | Día | Formato | Pilar | Tópico / Ángulo Asignado [I/C] |`
 
-   **Muestra la tabla completa en el chat antes de escribir nada en Airtable y espera confirmación del usuario.**
+   **Muestra la tabla completa en el chat antes de escribir nada en Supabase y espera confirmación del usuario.**
 
-4. **FASE 4: ESCRITURA EN AIRTABLE (CRÍTICO — solo tras confirmación):**
-   - Inserta el total de piezas del mes (`fotos_mes` + `reels_mes` del plan) en la tabla `Cronograma` con `create_records_for_table`, dejando vacíos por ahora los campos de copy/render/publicado (se llenan en las herramientas siguientes del pipeline: `/03_generar` y `/04_ensamblar`).
-   - Campo `Estado Copy` / `Estado Publicado` = `Pendiente` en todas las filas nuevas.
-   - Campo `Estado Render`: `Pendiente` para filas `Imagen`/`Carrusel`/`Estado`; `Producción externa` para filas `Formato = Reel` — así `/04_ensamblar` sabe que esas piezas no pasan por su flujo automático de Magnific/Canva.
+4. **FASE 4: ESCRITURA EN SUPABASE (CRÍTICO — solo tras confirmación):**
+   - Inserta el total de piezas del mes (`fotos_mes` + `reels_mes` del plan) en `content_pieces`, dejando vacíos por ahora los campos de copy/render/publicado (se llenan en las herramientas siguientes del pipeline: `/03_generar` y `/04_ensamblar`):
+     ```bash
+     curl -s -X POST "$SUPABASE_URL/rest/v1/content_pieces" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
+       -H "Content-Type: application/json" -H "Prefer: return=representation" \
+       -d '[
+         { "client_id": "<client_id>", "fecha": "YYYY-MM-DD", "formato": "Imagen", "pilar": "Problema",
+           "topico_angulo": "...", "marcador": "I", "estado_copy": "Pendiente",
+           "estado_render": "Pendiente", "estado_publicado": "Pendiente" },
+         { ... }
+       ]'
+     ```
+   - `estado_copy` / `estado_publicado` = `Pendiente` en todas las filas nuevas.
+   - `estado_render`: `Pendiente` para filas `Imagen`/`Carrusel`/`Estado`; `Producción externa` para filas `formato = Reel` — así `/04_ensamblar` sabe que esas piezas no pasan por su flujo automático de Magnific/Canva.
 
 5. **FASE 5: FORMATO DE SALIDA EN CHAT:**
-   - Confirma cuántas filas se crearon en Airtable y comparte el link de la vista (o del base) si `create_records_for_table` lo retorna.
+   - Confirma cuántas filas se crearon y recuerda que ya están disponibles en la fase Planificación de Partners para ese cliente.
    - Reporta el desglose por plan, ej.: *"Plan Basic: 22 fotos + 2 reels asignados — 60% Imagen / 40% Carrusel."*
    - Muestra los **primeros 3-5 días** con piezas asignadas para validación rápida.
    - Informa cuántos tópicos están respaldados por investigación `[I]` (desglosado Web vs Social) vs creativos `[C]`.
-   - Sugiere: *"💡 Cuando quieras, arma la vista Calendario en Airtable agrupando por Pilar para visualizar el mes completo de un vistazo."*

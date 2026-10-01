@@ -7,7 +7,13 @@ description: genesis_cliente
 
 **Rol:** Eres el investigador fundacional. Antes de que exista una sola pieza de contenido, un cronograma o un informe mensual para un cliente, tiene que existir esto: un mapeo real y verificado de su mercado, su competencia y el hueco que puede ocupar. Sin este proceso, todo lo que hacen las Herramientas 1-6 se construye sobre supuestos — con él, se construye sobre evidencia. Este proceso corre **una sola vez por cliente** (o se re-ejecuta deliberadamente cuando el mercado cambió lo suficiente como para justificar un nuevo estudio, no en cada ciclo mensual).
 
-> **Cuándo usar esto vs. `/01_escanearmercado`:** este proceso es el **génesis** — construye desde cero el universo de competidores, el dossier profundo y el tamaño de mercado de un cliente nuevo (existe o no existe todavía como negocio). `/01_escanearmercado` es **mantenimiento continuo** — asume que ese universo ya existe (en `6.-fuentes.md` o en el JSON maestro de este proceso) y lo usa para vigilancia competitiva recurrente. Si `[Cliente]/Inputs/estudio_mercado_maestro.json` no existe todavía, corre este proceso primero.
+> **Cuándo usar esto vs. `/01_escanearmercado`:** este proceso es el **génesis** — construye desde cero el universo de competidores, el dossier profundo y el tamaño de mercado de un cliente nuevo (existe o no existe todavía como negocio). `/01_escanearmercado` es **mantenimiento continuo** — asume que ese universo ya existe (en `6.-fuentes.md` o en la fila de `market_studies` de este proceso) y lo usa para vigilancia competitiva recurrente. Si no existe todavía una fila en `market_studies` para este cliente, corre este proceso primero.
+
+> **Nota de fusión con Partners (Supabase):** este proceso se sigue operando a mano, en Claude Desktop, exactamente igual que hasta ahora — nadie lo automatiza sin supervisión, porque el mercado peruano no es confiable solo con datos scrapeados. Lo único que cambia es el destino final: el estudio ya no vive solo en un JSON local, también se escribe en la tabla `market_studies` de Supabase (proyecto `pixely_partners`, ref `zvpisdftltnukbozyuge`) para que el cliente lo vea dentro de la app de Partners, en la fase Mercado. Esto requiere dos variables nuevas en el mismo `.env` donde ya vive `APIFY_API_TOKEN` (`D:\ANTES_15_09_2026\0.-Publicidad_nivel_01\.agents\workflows\.env`, nunca subir este archivo a git):
+> ```
+> SUPABASE_URL=https://zvpisdftltnukbozyuge.supabase.co
+> SUPABASE_SERVICE_KEY=<service role key, está en el backend de Railway como SUPABASE_KEY>
+> ```
 
 > **Nota de origen:** esta metodología nace de la ejecución real para World Tasty Burguer (dark kitchen nueva, Trujillo, sep. 2026) — cada fase abajo fue validada en producción, no es teoría.
 
@@ -23,6 +29,7 @@ description: genesis_cliente
 - **Firecrawl** — sitios propios de competidores que no están en un agregador de delivery.
 - **Fuentes oficiales del sector** (INEI, PRODUCE, SUNAT, cámaras de comercio) — para la validación top-down del tamaño de mercado; se descargan con `curl -k` si el certificado SSL falla en `WebFetch`.
 - **reportlab + matplotlib + pymupdf** (skill nativa de PDF) — para el informe final.
+- **Bash (`curl`) contra la API REST de Supabase** — mismo patrón que Apify: token leído del `.env` en el momento de la llamada, nunca asumido en memoria entre pasos.
 
 Si algún actor de Apify no está en el plan del token, no adivines un actor alternativo desconocido (quemarás créditos sin certeza del schema) — documenta el gap honestamente y sigue con las demás fuentes.
 
@@ -33,7 +40,15 @@ Si algún actor de Apify no está en el plan del token, no adivines un actor alt
 0. **FASE 0: DIAGNÓSTICO DEL CLIENTE:**
    - ¿El negocio ya opera (tiene local, ventas, presencia) o es un lanzamiento nuevo (como World Tasty Burguer)? Esto no cambia el proceso, pero sí el tono del informe final (Fase 7): un negocio nuevo necesita una "guía de problemáticas" de apertura; uno existente puede saltar directo al diagnóstico competitivo.
    - Confirma con el usuario: nombre del cliente, ciudad, rubro/categoría exacta a investigar (ej. "hamburgueserías", no "restaurantes" en general — cuanto más preciso el rubro, más limpio el censo de Maps).
-   - Crea `[Cliente]/Inputs/` y `[Cliente]/Outputs/` si no existen.
+   - Crea `[Cliente]/Inputs/` y `[Cliente]/Outputs/` si no existen — esto sigue siendo la carpeta de trabajo local, independiente de Partners.
+   - **Resuelve el `client_id` de Partners (obligatorio para la Fase 5):** este cliente debe existir ya en la tabla `clients` de Supabase (se crea desde el panel de Admin de Partners). Búscalo por nombre:
+     ```bash
+     SUPABASE_URL=$(grep SUPABASE_URL "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
+     SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
+     curl -s "$SUPABASE_URL/rest/v1/clients?nombre=ilike.*[nombre_del_cliente]*&select=id,nombre" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+     ```
+     Si no hay match o hay más de uno, muestra las opciones (o la ausencia de resultados) al usuario y pide el `client_id` exacto antes de continuar — nunca lo inventes ni asumas el primero de la lista.
 
 1. **FASE 1: CENSO TOTAL DE COMPETIDORES (Google Maps vía Apify):**
    - Corre `compass/crawler-google-places` con 2-3 queries de búsqueda que cubran variaciones del rubro + ciudad (ej. "hamburguesas Trujillo", "hamburgueseria Trujillo", "burger Trujillo").
@@ -59,7 +74,7 @@ Si algún actor de Apify no está en el plan del token, no adivines un actor alt
    - **Cruce:** el rango bottom-up debería representar una fracción coherente del rango top-down (ej. 1-5% si es una sub-categoría dentro de un sector más amplio). Esa coincidencia es lo que da credibilidad — preséntalo siempre como rango con metodología visible, nunca como una cifra puntual sin sustento.
 
 5. **FASE 5: CONSOLIDACIÓN — EL JSON MAESTRO:**
-   - Todo lo anterior converge en **un solo archivo**, fuente de verdad del cliente: `[Cliente]/Inputs/estudio_mercado_maestro.json`, con esta estructura mínima:
+   - Todo lo anterior converge en una sola estructura, fuente de verdad del cliente (fila en `market_studies` de Supabase; el JSON local `[Cliente]/Inputs/estudio_mercado_maestro.json` sigue existiendo como copia de trabajo), con esta estructura mínima:
      ```
      cliente, ciudad, fecha_estudio, version, fecha_actualizacion,
      universo_competidores: { total_detectado_maps, total_relevante_filtrado, fuente, listado[] },
@@ -70,7 +85,21 @@ Si algún actor de Apify no está en el plan del token, no adivines un actor alt
      notas_metodologicas: { fuentes_*, formato_citas: "APA", limitaciones_honestas[] }
      ```
    - **Todas las fuentes en formato APA**, sin excepción — es el estándar del cliente para este archivo hacia adelante.
-   - Este JSON es lo que **"queda registrado y se puede consultar siempre"**: los procesos 1, 2 y 6 deben leerlo como contexto de fondo cuando exista (ver nota al pie de cada uno).
+   - El JSON local sigue siendo tu copia de trabajo (útil para depurar sin reconsultar APIs), pero **la fuente de verdad ahora es Supabase**: inserta o actualiza la fila de este cliente en `market_studies` (usa `Prefer: resolution=merge-duplicates` para que una re-ejecución actualice en vez de duplicar):
+     ```bash
+     curl -s -X POST "$SUPABASE_URL/rest/v1/market_studies" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
+       -H "Content-Type: application/json" -H "Prefer: resolution=merge-duplicates,return=representation" \
+       -d '{
+         "client_id": "<el client_id resuelto en la Fase 0>",
+         "ciudad": "...", "rubro": "...", "fecha_estudio": "YYYY-MM-DD", "version": "1",
+         "universo_competidores": { ... }, "dossier_profundo": [ ... ],
+         "tamano_mercado": { ... }, "panorama_producto_precio": { ... },
+         "mapa_competidores_completo": { ... }, "notas_metodologicas": { ... }
+       }'
+     ```
+     Los 6 campos `jsonb` reciben el objeto correspondiente tal cual del JSON maestro, sin aplanar ni renombrar claves — eso es lo que después lee la pantalla de Mercado en Partners.
+   - Este estudio es lo que **"queda registrado y se puede consultar siempre"**: los procesos 1, 2 y 6 deben leerlo (desde Supabase, no desde el JSON) como contexto de fondo cuando exista (ver nota al pie de cada uno).
 
 6. **FASE 6: SÍNTESIS ANALÍTICA:**
    - **Matriz de insumos** (competidor × ingrediente/atributo del producto): revela cuáles son estándar de mercado (≥50% de los competidores) y cuáles son diferenciadores reales (usados por 0-1 competidor).
@@ -89,7 +118,14 @@ Si algún actor de Apify no está en el plan del token, no adivines un actor alt
    - **Control de calidad obligatorio antes de entregar:** renderiza cada página a PNG (`pymupdf`) y revísalas tú mismo — errores típicos ya detectados en producción: texto sin tildes/eñes, tablas partidas a mitad de página en el salto, párrafos huérfanos en página casi en blanco (usa `KeepTogether`), colores de marca incorrectos (usa el color real de la marca, sampleado del logo si hace falta, no un color por defecto).
 
 8. **FASE 8: ENTREGA Y CONEXIÓN CON EL RESTO DEL PIPELINE:**
-   - Guarda el PDF final en `[Cliente]/Outputs/` y entrégalo con `SendUserFile`.
+   - Guarda el PDF final en `[Cliente]/Outputs/` y entrégalo con `SendUserFile` (como hasta ahora, para quien está corriendo el proceso).
+   - Súbelo también al bucket `market-studies` de Supabase Storage, para que el cliente pueda descargarlo desde Partners:
+     ```bash
+     curl -s -X POST "$SUPABASE_URL/storage/v1/object/market-studies/<client_id>/informe-<fecha_estudio>.pdf" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
+       -H "Content-Type: application/pdf" --data-binary @"[Cliente]/Outputs/informe.pdf"
+     ```
+     Luego actualiza `pdf_url` en la fila de `market_studies` de este cliente con `https://zvpisdftltnukbozyuge.supabase.co/storage/v1/object/public/market-studies/<client_id>/informe-<fecha_estudio>.pdf` (mismo endpoint de la Fase 5, con `PATCH` filtrando por `client_id`).
    - Si se generaron versiones intermedias (por capítulo) antes de la fusión final, bórralas del Output una vez fusionadas — un solo archivo vigente, no versiones duplicadas.
    - Confirma en el chat: cuántos competidores en el dossier profundo, cuántas cartas 100% verificadas, el rango final de tamaño de mercado, y el hueco/oportunidad principal identificado.
-   - A partir de aquí, `estudio_mercado_maestro.json` es un insumo disponible para `/01_escanearmercado` (contexto de competidores ya mapeados), `/02_crearcronograma` (ángulos de contenido respaldados por hallazgos reales) y `/06_reportar_cliente` (contexto de mercado para el informe mensual) — no hace falta repetir este proceso para usarlo, solo leer el archivo.
+   - A partir de aquí, la fila de `market_studies` de este cliente es un insumo disponible para `/01_escanearmercado` (contexto de competidores ya mapeados), `/02_crearcronograma` (ángulos de contenido respaldados por hallazgos reales) y `/06_reportar_cliente` (contexto de mercado para el informe mensual) — no hace falta repetir este proceso para usarlo, solo consultar Supabase.
