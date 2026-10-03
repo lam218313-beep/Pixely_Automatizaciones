@@ -33,7 +33,7 @@ description: crear_cronograma
    - `content_pieces` es tu único destino de escritura para esta fase (reemplaza `cronograma_nivel_01.md`, la creación de `_status.md`, y la tabla `Cronograma` de Airtable).
 
 1. **FASE 1: LECTURA DE INTELIGENCIA LOCAL Y DE SUPABASE (OBLIGATORIO):**
-   - **Identidad y buyer — primero Supabase, igual que en `/01_escanearmercado`:** consulta `brand_identities` (tono, arquetipo) y `client_interviews.data` (buyer, info comercial) para este `client_id`; si alguna fila no existe todavía, cae al fallback de siempre: `1.-identidad.md`, `4.-buyer.md`, `3.-inputs_comercial.md` locales.
+   - **Identidad y buyer — primero Supabase, igual que en `/01_escanearmercado`:** consulta `brand_identities` — la **Voz de marca**: `tone_traits` (con ejemplos de sí/no), `palabras_si`, `palabras_no`, `archetype`, `voz_estado` — y `client_interviews.data` (buyer, info comercial) para este `client_id`; si alguna fila no existe todavía, cae al fallback de siempre: `1.-identidad.md`, `4.-buyer.md`, `3.-inputs_comercial.md` locales.
    - **Estrategia aprobada en Partners (paso 4):** consulta `strategy_nodes` para este `client_id`:
      ```bash
      curl -s "$SUPABASE_URL/rest/v1/strategy_nodes?client_id=eq.<client_id>&select=id,type,label,description,parent_id,suggested_format,suggested_frequency,strategic_rationale,creative_hooks" \

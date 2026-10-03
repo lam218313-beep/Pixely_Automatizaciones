@@ -47,12 +47,12 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
 1. **FASE 1: ASIMILACIÓN DEL CONTEXTO:**
    - **Identidad y buyer — primero Supabase, archivos locales solo como fallback:**
      ```bash
-     curl -s "$SUPABASE_URL/rest/v1/brand_identities?client_id=eq.<client_id>&select=mission,vision,archetype,tone_traits,values" \
+     curl -s "$SUPABASE_URL/rest/v1/brand_identities?client_id=eq.<client_id>&select=archetype,arquetipo_razon,tone_traits,palabras_si,palabras_no,voz_estado" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      curl -s "$SUPABASE_URL/rest/v1/client_interviews?client_id=eq.<client_id>&select=data" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
-     `brand_identities` trae la identidad (misión, visión, arquetipo, tono); `client_interviews.data` trae las respuestas de la Entrevista de Partners, donde vive el buyer persona y la info comercial (qué se vende, a qué precio, a quién). Si alguna de estas filas no existe todavía para el cliente (no ha pasado por Entrevista/Manual en Partners), usa como fallback los archivos locales de siempre en `D:\ANTES_15_09_2026\0.-Publicidad_nivel_01\[nombre_del_cliente]\Inputs\docs\`:
+     `brand_identities` trae la **Voz de marca** (arquetipo y su razón, rasgos de tono con ejemplos, palabras que sí y que no, y si el cliente ya la aprobó en `voz_estado`); `client_interviews.data` trae las respuestas de la Entrevista de Partners, donde vive el buyer persona y la info comercial (qué se vende, a qué precio, a quién). Si alguna de estas filas no existe todavía para el cliente (no ha pasado por Entrevista/Manual en Partners), usa como fallback los archivos locales de siempre en `D:\ANTES_15_09_2026\0.-Publicidad_nivel_01\[nombre_del_cliente]\Inputs\docs\`:
      - `1.-identidad.md` (Quiénes somos)
      - `3.-inputs_comercial.md` (Qué vendemos exactamente y a qué precio)
      - `4.-buyer.md` (A quién se lo vendemos y qué le duele)

@@ -45,7 +45,14 @@ description: generar_contenido
    - `market_findings` y `market_studies` de este `client_id` (mismas consultas que `/02_crearcronograma_V2`, Fase 1). Construye tu banco de datos: estadísticas, citas, hallazgos de Instagram/TikTok, promociones detectadas. Si un tópico no tiene evidencia directa, apóyate en `client_interviews.data` (info comercial y buyer) o, si falta, en `3.-inputs_comercial.md` y `4.-buyer.md`.
 
    **Paso C — Tono y Voz:**
-   - `brand_identities` (tono, arquetipo) y el buyer de `client_interviews.data` como filtro de estilo para todas las piezas; si alguna fila no existe todavía, cae a `1.-identidad.md` y `4.-buyer.md` locales.
+   - **Voz de marca** (`brand_identities`: `tone_traits`, `palabras_si`, `palabras_no`, `archetype`, `ejemplo_post`, `voz_estado`) y el buyer de `client_interviews.data` como filtro de estilo para todas las piezas:
+     ```bash
+     curl -s "$SUPABASE_URL/rest/v1/brand_identities?client_id=eq.<client_id>&select=tone_traits,palabras_si,palabras_no,archetype,arquetipo_razon,ejemplo_post,voz_estado,voz_comentario" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+     ```
+     - Los `ejemplo_si`/`ejemplo_no` de cada rasgo son la referencia de cómo suena (y cómo NO suena) la marca. Las `palabras_no` **no pueden aparecer en ningún copy**; revisa cada pieza contra esa lista antes de escribirla.
+     - Si `voz_estado` no es `Aprobada`, avisa al usuario antes de empezar: el cliente aún no aprobó su voz en Partners (si está en `Cambios solicitados`, muestra su `voz_comentario`). Sigue solo si el usuario lo confirma.
+     - Si la fila no existe todavía, cae a `1.-identidad.md` y `4.-buyer.md` locales.
 
 2. **FASE 2: PLANIFICACIÓN VISUAL GLOBAL (OBLIGATORIO — antes de escribir cualquier prompt):**
 
