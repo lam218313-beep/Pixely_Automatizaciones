@@ -34,12 +34,18 @@ description: crear_cronograma
 
 1. **FASE 1: LECTURA DE INTELIGENCIA LOCAL Y DE SUPABASE (OBLIGATORIO):**
    - **Identidad y buyer — primero Supabase, igual que en `/01_escanearmercado`:** consulta `brand_identities` — la **Voz de marca**: `tone_traits` (con ejemplos de sí/no), `palabras_si`, `palabras_no`, `archetype`, `voz_estado` — y `client_interviews.data` (buyer, info comercial) para este `client_id`; si alguna fila no existe todavía, cae al fallback de siempre: `1.-identidad.md`, `4.-buyer.md`, `3.-inputs_comercial.md` locales.
-   - **Estrategia aprobada en Partners (paso 4):** consulta `strategy_nodes` para este `client_id`:
+   - **Estrategia aprobada en Partners (la escribe `/01b_definir_estrategia`):** consulta `strategy_nodes` para este `client_id`:
      ```bash
      curl -s "$SUPABASE_URL/rest/v1/strategy_nodes?client_id=eq.<client_id>&select=id,type,label,description,parent_id,suggested_format,suggested_frequency,strategic_rationale,creative_hooks" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
      Es un árbol: `type = main` es el proyecto; un `secondary` cuyo `parent_id` es el `main` es un **objetivo**; un `secondary` cuyo padre es un objetivo es una **estrategia**; `type = concept` son los **conceptos de contenido** de cada estrategia (con `suggested_format`, `suggested_frequency`, `creative_hooks` y `strategic_rationale`). El objetivo principal lleva `tags = ["principal"]` (los demás, `["secundario"]`); dale más piezas a sus estrategias. Si un objetivo se llama literalmente "Objetivo Principal/Secundario", es una estrategia vieja: su objetivo real está en `description`. Úsalo como brújula del mes: cada pieza debe servir a un objetivo/estrategia, los conceptos son los territorios permitidos y su frecuencia sugerida guía cuántas piezas recibe cada uno. **No reemplaza al banco de munición:** la estrategia dice *qué perseguir*, `market_findings`/`market_studies` dicen *con qué evidencia*. Si no hay nodos, continúa con el resto y avisa al usuario de que el plan no está atado a una estrategia aprobada.
+     Luego revisa si el cliente la aprobó:
+     ```bash
+     curl -s "$SUPABASE_URL/rest/v1/strategy_reviews?client_id=eq.<client_id>&select=estado,comentario" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+     ```
+     Si `estado` no es `Aprobada` (o no hay fila), avisa antes de seguir: si es `Cambios solicitados`, muestra el `comentario` y sugiere correr primero `/01b_definir_estrategia`. Sigue solo si el usuario lo confirma.
    - Lee `7.-plan_contratado.md` para el plan (Lite/Basic/Pro), `fotos_mes` y `reels_mes` — esto define el volumen total que construyen las Fases 2 y 3.
    - Consulta `market_findings` en Supabase filtrando por `client_id`:
      ```bash

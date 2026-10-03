@@ -8,7 +8,8 @@ Procesos de Claude Desktop (slash-commands) que investigan mercado y planifican 
 |---|---|---|
 | `00_genesis_cliente.md` | Estudio de mercado fundacional (una vez por cliente). Partners lo dibuja en Mercado y lo usa para generar la Estrategia | escribe `market_studies` |
 | `01_escanearmercado.md` | Vigilancia competitiva recurrente. Partners la dibuja en Mercado y la usa para generar la Estrategia | lee `brand_identities`/`client_interviews`/`market_studies`, escribe `market_findings` |
-| `02_crearcronograma_V2.md` | Cronograma de contenido del mes — **el único plan mensual del sistema** | lee `brand_identities`/`client_interviews`/`strategy_nodes`/`market_findings`/`market_studies`, escribe `content_pieces` |
+| `01b_definir_estrategia.md` | Define objetivos → estrategias → conceptos con la Ficha + 00 + 01 + Voz de marca, y llena la página **Estrategia** de Partners (el cliente la aprueba ahí). Única fuente de la Estrategia | lee `client_interviews`/`market_studies`/`market_findings`/`brand_identities`/`strategy_reviews`, escribe `strategy_nodes` y `strategy_reviews` |
+| `02_crearcronograma_V2.md` | Cronograma de contenido del mes — **el único plan mensual del sistema** | lee `brand_identities`/`client_interviews`/`strategy_nodes`/`strategy_reviews`/`market_findings`/`market_studies`, escribe `content_pieces` |
 | `03_generar.md` | Copy por red, prompt visual o guion de Reel, textos de láminas; corrige textos que el cliente devolvió | lee `content_pieces`/`market_*`/`brand_identities`/`client_interviews`, actualiza `content_pieces` |
 | `04_ensamblar.md` | Foto Magnific + montaje Canva, guardado permanente en Storage; corrige lo visual que el cliente devolvió; sube los videos de Reel | actualiza `content_pieces`, sube a Storage `content-pieces` |
 | `05_publicar.md` | Programa en Metricool solo lo que el cliente aprobó | lee y actualiza `content_pieces` |
@@ -16,6 +17,18 @@ Procesos de Claude Desktop (slash-commands) que investigan mercado y planifican 
 ## Proceso sin terminar (no toca Supabase todavía)
 
 `06_reportar_cliente.md` — sigue apuntando al flujo viejo (local/Airtable). No lo uses asumiendo que está conectado a Partners.
+
+### Contrato de `strategy_nodes` (01b → Partners → 02)
+
+| Nivel | `type` | `parent_id` | Campos que Partners dibuja |
+|---|---|---|---|
+| Marca | `main` | `null` | `label` = nombre de la marca |
+| Objetivo | `secondary` | el `main` | `label` (título concreto), `description` (porqué), `tags` = `["principal"]` o `["secundario"]` |
+| Estrategia | `secondary` | un objetivo | `label` (sin "Estrategia:"), `description` (porqué) |
+| Concepto | `concept` | una estrategia | `label`, `description`, `suggested_format` (`post`/`carousel`/`story`/`reel`), `suggested_frequency` (`high`/`medium`/`low`), `tags`, `strategic_rationale`, `creative_hooks` (lista), `execution_guidelines` (`structure`, `key_elements`, `dos`, `donts`) |
+
+- `x`/`y` se dejan en 0: Partners acomoda el árbol solo; si el cliente mueve un nodo, Partners guarda las posiciones.
+- Ids: `<client_id>-o1-e2-c3`. Al escribir una estrategia nueva, `strategy_reviews.estado` vuelve a `Pendiente`; el cliente pone `Aprobada` o `Cambios solicitados` (+ `comentario`) desde Partners.
 
 ### Contrato de `content_pieces` (02–05 y Partners)
 
@@ -63,3 +76,4 @@ Forma rápida de auditar: `grep -rn "clients\.\|market_studies\.\|market_finding
 - **2026-10-03 (5)** — El Manual de marca de Partners pasó a ser **Voz de marca**: solo lo que usan 01–03 (rasgos de tono con ejemplos sí/no, `palabras_si`, `palabras_no`, arquetipo y su razón, `ejemplo_post`) más los colores reales que fija el cliente. El cliente la aprueba (`voz_estado`). Nuevas columnas en `brand_identities`; misión, visión y valores ya no se generan. 01–03 leen esos campos; 03 prohíbe las `palabras_no` y avisa si la voz no está aprobada. El generador de Partners tenía un error que le pasaba la entrevista vacía (por eso salían manuales genéricos): corregido.
 - **2026-10-03 (6)** — Partners eliminó **Análisis** (el estudio de los comentarios del Instagram del cliente, Q1–Q10) y su Wiki: con pocas interacciones no era confiable. Desde ahora la **Estrategia se genera con la Ficha + Mercado**: el estudio de `00`, los hallazgos de `01` (los de mayor confianza primero) y la Voz de marca. Así, `00` y `01` ya no solo alimentan la pantalla de Mercado: también la Estrategia que `02` lee en `strategy_nodes`. La pantalla de Mercado se rediseñó con gráficos y ahora dibuja más campos (`total_relevante_filtrado`, `total_detectado_maps`; documentado en la Fase 5 de `00`) y agrupa los hallazgos por `fuente`, así que `01` fija una lista de nombres de canal (Fase 5 de `01`). La tabla `analysis_reports` queda en la base de datos, sin uso. Ningún proceso de este repo usaba Análisis.
 - **2026-10-03 (7)** — La Estrategia de Partners perdía su mejor contenido: el generador escribía `strategic_rationale`, `creative_hooks` y `execution_guidelines` pero no se guardaban, y cada autoguardado de la pantalla los borraba (por eso `02` siempre los recibía vacíos). Corregido; además abrir la pantalla ya no reescribe la estrategia. Los objetivos ahora tienen títulos concretos (antes todos se llamaban "Objetivo Principal/Secundario") y la prioridad va en `tags` (`principal`/`secundario`); las estrategias guardan su porqué en `description`. Nota agregada en la Fase 1 de `02`. Las estrategias existentes necesitan regenerarse para tener estos datos.
+- **2026-10-03 (8)** — La Estrategia deja de generarse con IA dentro de Partners (se quitaron el botón "Regenerar con IA" del Admin, sus endpoints y el generador). Nueva receta `01b_definir_estrategia.md`, entre 01 y 02: propone el árbol en el chat con la evidencia citada, espera el visto bueno y lo escribe en `strategy_nodes`. Nueva tabla `strategy_reviews` (el cliente aprueba o pide cambios en Partners; 01b tiene modo corrección y 02 avisa si la estrategia no está aprobada). `strategy_nodes.x`/`y` ahora valen 0 por defecto. Contrato arriba.
