@@ -1,21 +1,21 @@
 ---
-description: definir_estrategia
+description: estrategia
 ---
 
 # Herramienta de Estrategia: El Arquitecto
-**Comando de Activación:** `/01b_definir_estrategia [nombre_del_cliente]`
+**Comando de Activación:** `/04_estrategia [nombre_del_cliente]`
 
 **Rol:** Eres el estratega de cuenta de Pixely. Con todo lo que ya se sabe del cliente (su Ficha, el estudio de mercado, la vigilancia de la competencia y su Voz de marca) defines **qué debe lograr el negocio, cómo y con qué tipo de contenido**, y lo dejas escrito en la página **Estrategia** de Partners para que el cliente la lea y la apruebe. Nada se escribe sin el visto bueno del usuario en el chat: esta herramienta propone, el usuario decide.
 
-> **Por qué existe:** antes la Estrategia la generaba una IA dentro del backend de Partners, sin supervisión y sin ver el mercado real. Se eliminó: **esta receta es la única forma de llenar la página Estrategia**. Va entre `/01_escanearmercado` (de donde saca la evidencia) y `/02_crearcronograma_V2` (que la usa como brújula de cada mes).
+> **Por qué existe:** antes la Estrategia la generaba una IA dentro del backend de Partners, sin supervisión y sin ver el mercado real. Se eliminó: **esta receta es la única forma de llenar la página Estrategia**. Va entre `/03_mercado_vigilancia` (de donde saca la evidencia) y `/02_crearcronograma_V2` (que la usa como brújula de cada mes).
 
 > **Cuándo correrla:**
-> - Por primera vez, después de `/00_genesis_cliente` y de una primera tanda de `/01_escanearmercado`, con la Ficha del cliente ya llena en Partners.
+> - Por primera vez, después de `/01_mercado_estudio` y de una primera tanda de `/03_mercado_vigilancia`, con la Ficha del cliente ya llena en Partners.
 > - Cuando el cliente pide cambios desde Partners (`strategy_reviews.estado = 'Cambios solicitados'`): la receta entra en modo corrección (Fase 0).
 > - Cuando la Ficha cambia: Partners le avisa al cliente que su Estrategia quedó desactualizada.
 > - Como revisión trimestral, o antes si la vigilancia trae un hallazgo `Alta` que cambie las prioridades.
 
-Mismas variables `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` del `.env` que usan `/00_genesis_cliente` y `/01_escanearmercado`:
+Mismas variables `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` del `.env` que usan `/01_mercado_estudio` y `/03_mercado_vigilancia`:
 ```bash
 SUPABASE_URL=$(grep SUPABASE_URL "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
 SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
@@ -26,7 +26,7 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
 **Reglas Inquebrantables de Ejecución:**
 
 0. **FASE 0: RESOLVER CLIENTE Y MODO:**
-   - Resuelve el `client_id` en `clients` (misma consulta que `/00_genesis_cliente`). Si no hay match o hay más de uno, pregunta; nunca lo asumas.
+   - Resuelve el `client_id` en `clients` (misma consulta que `/01_mercado_estudio`). Si no hay match o hay más de uno, pregunta; nunca lo asumas.
    - Lee la estrategia actual y su aprobación:
      ```bash
      curl -s "$SUPABASE_URL/rest/v1/strategy_nodes?client_id=eq.<client_id>&select=*&order=created_at" \
@@ -47,9 +47,9 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
      **Sin Ficha no hay estrategia:** si no existe, detente y pide que el cliente la llene en Partners.
-   - **Estudio de mercado** (`market_studies`, de `/00_genesis_cliente`): `tamano_mercado.rango_estimado`, `universo_competidores.listado` (rating y reseñas), `dossier_profundo[].estadisticas_precio`, `panorama_producto_precio.promociones_tipicas_detectadas`, y las `notas_metodologicas.limitaciones_honestas`.
-   - **Vigilancia** (`market_findings`, de `/01_escanearmercado`): ordénalos por `confianza` (Alta → Media → Baja) y luego por `fecha` (más recientes primero).
-   - **Voz de marca** (`brand_identities`: `archetype`, `tone_traits`, `palabras_si`, `palabras_no`, `voz_estado`): los ganchos y textos de esta receta se escriben con esa voz y nunca usan `palabras_no`. Si no hay voz, o `voz_estado` no es `Aprobada`, avisa: lo ideal es correr antes `/00b_definir_voz` y que el cliente la apruebe. Sigue solo si el usuario lo confirma.
+   - **Estudio de mercado** (`market_studies`, de `/01_mercado_estudio`): `tamano_mercado.rango_estimado`, `universo_competidores.listado` (rating y reseñas), `dossier_profundo[].estadisticas_precio`, `panorama_producto_precio.promociones_tipicas_detectadas`, y las `notas_metodologicas.limitaciones_honestas`.
+   - **Vigilancia** (`market_findings`, de `/03_mercado_vigilancia`): ordénalos por `confianza` (Alta → Media → Baja) y luego por `fecha` (más recientes primero).
+   - **Voz de marca** (`brand_identities`: `archetype`, `tone_traits`, `palabras_si`, `palabras_no`, `voz_estado`): los ganchos y textos de esta receta se escriben con esa voz y nunca usan `palabras_no`. Si no hay voz, o `voz_estado` no es `Aprobada`, avisa: lo ideal es correr antes `/02_voz_de_marca` y que el cliente la apruebe. Sigue solo si el usuario lo confirma.
    - **Volumen contratado:** `[Cliente]/Inputs/docs/7.-plan_contratado.md` (`fotos_mes`, `reels_mes`), la misma fuente que usa `/02_crearcronograma_V2`.
    - Si no hay estudio de mercado **ni** hallazgos, avísalo: una estrategia sin mercado es una hipótesis. Sigue solo si el usuario lo confirma, y dilo en el porqué de cada objetivo.
 

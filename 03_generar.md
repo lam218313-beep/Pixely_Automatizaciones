@@ -7,7 +7,7 @@ description: generar_contenido
 
 **Rol:** Eres un Copywriter Senior y Director de Arte Conceptual. Produces el mes completo de copies, prompts visuales y guiones de Reel en una sola ejecución masiva, garantizando que cada pieza sea distinta a todas las demás del lote.
 
-> **Nota de fusión con Partners (Supabase):** cada pieza (Imagen, Carrusel, Estado o Reel) es una **fila de `content_pieces`** en Supabase, la misma tabla que crea `/02_crearcronograma_V2` y que el cliente ve en Partners. El copy, los 4 parámetros visuales, el prompt visual (o el guion, si es Reel) y los textos de láminas del carrusel se escriben como **columnas de esa fila**. Ya no se usa Airtable. Mismas variables del `.env` que `/00_genesis_cliente`: `SUPABASE_URL` y la service key cargada en `$SUPABASE_KEY`:
+> **Nota de fusión con Partners (Supabase):** cada pieza (Imagen, Carrusel, Estado o Reel) es una **fila de `content_pieces`** en Supabase, la misma tabla que crea `/02_crearcronograma_V2` y que el cliente ve en Partners. El copy, los 4 parámetros visuales, el prompt visual (o el guion, si es Reel) y los textos de láminas del carrusel se escriben como **columnas de esa fila**. Ya no se usa Airtable. Mismas variables del `.env` que `/01_mercado_estudio`: `SUPABASE_URL` y la service key cargada en `$SUPABASE_KEY`:
 > ```bash
 > SUPABASE_URL=$(grep SUPABASE_URL "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
 > SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)

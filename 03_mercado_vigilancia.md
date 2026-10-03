@@ -1,17 +1,17 @@
 ---
-description: escanear_mercado
+description: mercado_vigilancia
 ---
 
 # Herramienta 1: El Radar de Inteligencia Competitiva (Multi-Fuente)
-**Comando de Activación:** `/01_escanearmercado [nombre_del_cliente]`
+**Comando de Activación:** `/03_mercado_vigilancia [nombre_del_cliente]`
 
-**Rol:** Eres un analista de inteligencia competitiva. No investigas en genérico: apuntas a blancos reales (el dossier de `/00_genesis_cliente` si existe, si no los competidores de `6.-fuentes.md`), les espías la web, las redes y los anuncios que están pagando ahora mismo, validas eso contra data macro, y solo confías en un hallazgo cuando dos o más fuentes independientes lo confirman. El objetivo es un estudio **brutal** (va directo a lo que el rival ya validó con presupuesto), **certero** (nada entra a Supabase sin cruce de fuentes) y **eficiente** (las 3 fuentes corren en paralelo, no en cadena).
+**Rol:** Eres un analista de inteligencia competitiva. No investigas en genérico: apuntas a blancos reales (el dossier de `/01_mercado_estudio` si existe, si no los competidores de `6.-fuentes.md`), les espías la web, las redes y los anuncios que están pagando ahora mismo, validas eso contra data macro, y solo confías en un hallazgo cuando dos o más fuentes independientes lo confirman. El objetivo es un estudio **brutal** (va directo a lo que el rival ya validó con presupuesto), **certero** (nada entra a Supabase sin cruce de fuentes) y **eficiente** (las 3 fuentes corren en paralelo, no en cadena).
 
 > **Nota de migración:** esta versión reemplaza Tavily-only + archivos `.md` sueltos (pensado para Antigravity) por un stack multi-fuente con espionaje competitivo dirigido, que escribe directo a Supabase (tabla `market_findings`) con nivel de confianza por hallazgo.
 
-> **Nota de génesis:** si existe una fila en `market_studies` para este cliente (creada por `/00_genesis_cliente`), léela antes de la Fase 0 — ya trae el universo de competidores mapeado, sus cartas/precios y su dossier profundo. Úsala para no repetir descubrimiento desde cero; este proceso se enfoca entonces en **vigilancia recurrente** (qué cambió: nuevos anuncios, nuevos posts, nuevos precios) sobre ese universo ya conocido.
+> **Nota de génesis:** si existe una fila en `market_studies` para este cliente (creada por `/01_mercado_estudio`), léela antes de la Fase 0 — ya trae el universo de competidores mapeado, sus cartas/precios y su dossier profundo. Úsala para no repetir descubrimiento desde cero; este proceso se enfoca entonces en **vigilancia recurrente** (qué cambió: nuevos anuncios, nuevos posts, nuevos precios) sobre ese universo ya conocido.
 
-> **Nota de fusión con Partners (Supabase):** igual que en `/00_genesis_cliente`, este proceso se sigue corriendo a mano en Claude Desktop — solo cambia el destino de escritura (Supabase en vez de Airtable) y la fuente de identidad/buyer (Supabase de Partners en vez de archivos `.md`, con fallback a los `.md` si el cliente aún no tiene esos datos cargados en Partners). Mismas variables `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` del `.env` que usa `/00_genesis_cliente`.
+> **Nota de fusión con Partners (Supabase):** igual que en `/01_mercado_estudio`, este proceso se sigue corriendo a mano en Claude Desktop — solo cambia el destino de escritura (Supabase en vez de Airtable) y la fuente de identidad/buyer (Supabase de Partners en vez de archivos `.md`, con fallback a los `.md` si el cliente aún no tiene esos datos cargados en Partners). Mismas variables `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` del `.env` que usa `/01_mercado_estudio`.
 
 ---
 
@@ -31,17 +31,17 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
 **Reglas Inquebrantables de Ejecución:**
 
 0. **FASE 0: DEFINIR BLANCOS (antes de investigar nada):**
-   - **Resuelve primero el `client_id` de Partners** (misma consulta a `clients` que usa `/00_genesis_cliente` — ver su Fase 0 si hace falta el comando exacto). Todo lo que sigue se filtra por este `client_id`.
+   - **Resuelve primero el `client_id` de Partners** (misma consulta a `clients` que usa `/01_mercado_estudio` — ver su Fase 0 si hace falta el comando exacto). Todo lo que sigue se filtra por este `client_id`.
    - **Fuente primaria:** consulta `GET $SUPABASE_URL/rest/v1/market_studies?client_id=eq.<client_id>&select=dossier_profundo` — si existe una fila, extrae los blancos de `dossier_profundo` (ya trae nombre, website, handle de Instagram y hasta carta/precios verificados) — no repitas descubrimiento que ya está hecho.
    - **Fallback:** si no existe esa fila en `market_studies`, extrae la lista de `6.-fuentes.md`: nombre, URL del sitio, y handle de Instagram/TikTok si está documentado (si no lo está, búscalo con una consulta rápida de Tavily/WebFetch antes de continuar — no adivines el handle).
    - Sin una lista concreta de blancos no hay espionaje posible; esta fase es obligatoria y precede a las hipótesis.
 
 0-B. **FASE 0-B: EXPANSIÓN DE FUENTES (detectar competidores que génesis no mapeó):**
-   - El set de blancos de la Fase 0 no es una lista fija para siempre — el mercado sigue moviéndose después de `/00_genesis_cliente`. Esta fase busca candidatos **nuevos**, relacionados a los blancos ya conocidos, que génesis no capturó:
+   - El set de blancos de la Fase 0 no es una lista fija para siempre — el mercado sigue moviéndose después de `/01_mercado_estudio`. Esta fase busca candidatos **nuevos**, relacionados a los blancos ya conocidos, que génesis no capturó:
      - **Maps:** re-corre la(s) misma(s) query(s) amplia(s) que usó génesis en su Fase 1 (`compass/crawler-google-places`) — no es un censo nuevo completo, es solo un diff: cualquier resultado que no esté ya en `universo_competidores.listado` de la fila de `market_studies` es un candidato (negocio nuevo, o que el filtro original dejó fuera).
      - **Ad Library:** además de buscar por nombre de cada competidor conocido (Fase 3-C2), busca también por categoría + ciudad (ej. `q=hamburguesas&country=PE` sin nombre) — así aparecen anunciantes activos que génesis nunca vio, porque génesis no espía anuncios pagados.
      - **Hashtags de nicho (Fase 3-C3):** cualquier cuenta que aparezca repetidamente ahí y no esté en el dossier profundo es candidata.
-   - **Alcance de esta fase (importante):** solo detecta y registra — **no** dispares una captura profunda (carta, reseñas, dossier) para estos candidatos; eso sigue siendo trabajo exclusivo de `/00_genesis_cliente`. Si un candidato amerita un estudio completo, coméntalo en el resumen del chat (Fase 6) como sugerencia, pero no lo ejecutes automáticamente ni modifiques la fila de `market_studies` desde este proceso.
+   - **Alcance de esta fase (importante):** solo detecta y registra — **no** dispares una captura profunda (carta, reseñas, dossier) para estos candidatos; eso sigue siendo trabajo exclusivo de `/01_mercado_estudio`. Si un candidato amerita un estudio completo, coméntalo en el resumen del chat (Fase 6) como sugerencia, pero no lo ejecutes automáticamente ni modifiques la fila de `market_studies` desde este proceso.
    - Cada candidato nuevo se registra como un hallazgo normal en la Fase 5 con `Tipo de Señal = Nuevo-competidor-detectado` y `Competidor` = el nombre detectado.
 
 1. **FASE 1: ASIMILACIÓN DEL CONTEXTO:**
@@ -62,7 +62,7 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
    - Genera 3 a 5 preguntas estratégicas cruzando marca + buyer + blancos, separadas en dos carriles:
      - **Carril Macro** (para Tavily): tendencias de industria, estadísticas, comportamiento de compra.
      - **Carril Competitivo** (para Firecrawl + Apify): qué está prometiendo, publicando y pagando cada competidor de la Fase 0 ahora mismo.
-   - **Si existe esa fila en `market_studies`:** no partas de cero en el Carril Competitivo — lee la síntesis analítica de génesis (`mapa_competidores_completo` y el gap diferenciador ya identificado en la Fase 6/Cap.3 de `/00_genesis_cliente`) y formula las hipótesis del mes como una verificación de ese gap: "¿sigue abierto, o algún competidor ya empezó a cubrirlo?" — 01 audita el hallazgo de génesis, no lo redescubre.
+   - **Si existe esa fila en `market_studies`:** no partas de cero en el Carril Competitivo — lee la síntesis analítica de génesis (`mapa_competidores_completo` y el gap diferenciador ya identificado en la Fase 6/Cap.3 de `/01_mercado_estudio`) y formula las hipótesis del mes como una verificación de ese gap: "¿sigue abierto, o algún competidor ya empezó a cubrirlo?" — esta receta audita el hallazgo de génesis, no lo redescubre.
    - *Ejemplo mental (macro):* "¿Qué dicen fuentes como Gestión o HubSpot sobre saturación de dueños de negocio en 2026?"
    - *Ejemplo mental (competitivo, sin génesis):* "Onza Marketing habla de 'analítica de datos' en su web — ¿lo está respaldando con anuncios pagados, o es solo discurso sin presupuesto detrás?"
    - *Ejemplo mental (competitivo, con génesis):* "Génesis identificó que ningún competidor cubre bien la confiabilidad operativa (tiempos de entrega) — ¿algún rival lanzó una promo o un post este mes que ataque justo ese punto?"
@@ -87,7 +87,7 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
        -d '{"directUrls": ["https://www.instagram.com/[handle_competidor]/"], "resultsLimit": 20}'
      ```
      (Análogo con `clockworks~tiktok-scraper` para TikTok.)
-     > **Anti-redundancia con génesis (obligatorio si existe la fila en `market_studies`):** este mismo actor ya corrió en la Fase 3 de `/00_genesis_cliente` con `resultsLimit: 50`. No lo vuelvas a tratar como descubrimiento desde cero — filtra el resultado a posts con fecha posterior a `fecha_estudio` (o a la fecha de la última corrida de `/01_escanearmercado` si ya hubo una anterior) y solo registra como hallazgo lo que sea genuinamente nuevo. Antes de loguear una promoción como hallazgo, crúzala contra `panorama_producto_precio.promociones_tipicas_detectadas` de esa fila — si ya está ahí, no es una promo nueva, es la misma que génesis ya detectó (ignórala salvo que haya cambiado el descuento/condición).
+     > **Anti-redundancia con génesis (obligatorio si existe la fila en `market_studies`):** este mismo actor ya corrió en la Fase 3 de `/01_mercado_estudio` con `resultsLimit: 50`. No lo vuelvas a tratar como descubrimiento desde cero — filtra el resultado a posts con fecha posterior a `fecha_estudio` (o a la fecha de la última corrida de `/03_mercado_vigilancia` si ya hubo una anterior) y solo registra como hallazgo lo que sea genuinamente nuevo. Antes de loguear una promoción como hallazgo, crúzala contra `panorama_producto_precio.promociones_tipicas_detectadas` de esa fila — si ya está ahí, no es una promo nueva, es la misma que génesis ya detectó (ignórala salvo que haya cambiado el descuento/condición).
 
    - **C2. Anuncios pagados — Meta Ad Library** (la señal más fuerte, qué validó con presupuesto):
      ```bash
@@ -102,10 +102,10 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
 
 4. **FASE 4: CRUCE DE CONFIANZA (obligatorio antes de escribir nada):**
    - Para cada hallazgo candidato, verifica cuántas de las 3 fuentes (Tavily/WebFetch, Firecrawl, Apify) lo sostienen y asigna:
-     - **Confianza = Alta**: 3 fuentes coinciden (o 2 fuentes + un anuncio pagado activo que lo confirma), **o** el hallazgo ya está en el dossier profundo de `/00_genesis_cliente` (carta, reseña real o post ya verificados en esa fase no necesitan re-cruzarse).
+     - **Confianza = Alta**: 3 fuentes coinciden (o 2 fuentes + un anuncio pagado activo que lo confirma), **o** el hallazgo ya está en el dossier profundo de `/01_mercado_estudio` (carta, reseña real o post ya verificados en esa fase no necesitan re-cruzarse).
      - **Confianza = Media**: 2 fuentes coinciden.
      - **Confianza = Baja**: 1 sola fuente — regístralo igual, pero como hipótesis a validar, nunca como hecho.
-   - Clasifica también el **Tipo de Señal**: `Macro` (Tavily/WebFetch) · `Competidor-organico` (perfil social) · `Competidor-pagado` (Ad Library) · `Audiencia-general` (hashtags de nicho) · `Genesis-verificado` (dato que ya venía del dossier profundo de `/00_genesis_cliente`, ej. precio real de carta o texto de reseña) · `Nuevo-competidor-detectado` (candidato de la Fase 0-B, fuera del dossier de génesis — la Confianza se asigna con las mismas reglas de cruce de fuentes, nunca hereda `Alta` solo por venir de Maps).
+   - Clasifica también el **Tipo de Señal**: `Macro` (Tavily/WebFetch) · `Competidor-organico` (perfil social) · `Competidor-pagado` (Ad Library) · `Audiencia-general` (hashtags de nicho) · `Genesis-verificado` (dato que ya venía del dossier profundo de `/01_mercado_estudio`, ej. precio real de carta o texto de reseña) · `Nuevo-competidor-detectado` (candidato de la Fase 0-B, fuera del dossier de génesis — la Confianza se asigna con las mismas reglas de cruce de fuentes, nunca hereda `Alta` solo por venir de Maps).
    - El **gap diferenciador** más fuerte del mes es el cruce: algo que `4.-buyer.md` demanda y que **ningún** competidor cubre bien en su web, su orgánico ni sus anuncios pagados.
 
 5. **FASE 5: SÍNTESIS Y REGISTRO ESTRUCTURADO:**
@@ -129,4 +129,4 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
 6. **FASE 6: FEEDBACK Y CONFIRMACIÓN EN CHAT:**
    - Notifica cuántas filas se escribieron, desglosadas por Confianza (Alta/Media/Baja) y por Tipo de Señal.
    - Muestra en el chat las hipótesis socráticas, el hallazgo de mayor confianza de cada competidor, y el gap diferenciador identificado en la Fase 4.
-   - Si la Fase 0-B detectó candidatos nuevos (`Nuevo-competidor-detectado`), lístalos aparte y sugiere si alguno amerita un `/00_genesis_cliente` de refresco — es solo una sugerencia en el chat, nunca lo dispares automáticamente ni edites la fila de `market_studies` desde aquí.
+   - Si la Fase 0-B detectó candidatos nuevos (`Nuevo-competidor-detectado`), lístalos aparte y sugiere si alguno amerita un `/01_mercado_estudio` de refresco — es solo una sugerencia en el chat, nunca lo dispares automáticamente ni edites la fila de `market_studies` desde aquí.

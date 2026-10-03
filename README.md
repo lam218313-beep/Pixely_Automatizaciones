@@ -6,10 +6,10 @@ Procesos de Claude Desktop (slash-commands) que investigan mercado y planifican 
 
 | Archivo | Qué hace | Tablas de Supabase |
 |---|---|---|
-| `00_genesis_cliente.md` | Estudio de mercado fundacional (una vez por cliente). Partners lo dibuja en Mercado y lo usa para generar la Estrategia | escribe `market_studies` |
-| `00b_definir_voz.md` | Define la **Voz de marca** conversando: Ficha + cómo hablan los clientes en las reseñas + cómo habla la competencia; propone 2 direcciones y llena la página Voz de marca de Partners (el cliente la aprueba ahí). Única fuente de la voz | lee `client_interviews`/`market_studies`/`market_findings`/`brand_identities`, escribe `brand_identities` (nunca `colors` ni `logo_url`) |
-| `01_escanearmercado.md` | Vigilancia competitiva recurrente. Partners la dibuja en Mercado y la usa para generar la Estrategia | lee `brand_identities`/`client_interviews`/`market_studies`, escribe `market_findings` |
-| `01b_definir_estrategia.md` | Define objetivos → estrategias → conceptos con la Ficha + 00 + 01 + Voz de marca, y llena la página **Estrategia** de Partners (el cliente la aprueba ahí). Única fuente de la Estrategia | lee `client_interviews`/`market_studies`/`market_findings`/`brand_identities`/`strategy_reviews`, escribe `strategy_nodes` y `strategy_reviews` |
+| `01_mercado_estudio.md` | Estudio de mercado fundacional (una vez por cliente). Partners lo dibuja en Mercado y lo usa para generar la Estrategia | escribe `market_studies` |
+| `02_voz_de_marca.md` | Define la **Voz de marca** conversando: Ficha + cómo hablan los clientes en las reseñas + cómo habla la competencia; propone 2 direcciones y llena la página Voz de marca de Partners (el cliente la aprueba ahí). Única fuente de la voz | lee `client_interviews`/`market_studies`/`market_findings`/`brand_identities`, escribe `brand_identities` (nunca `colors` ni `logo_url`) |
+| `03_mercado_vigilancia.md` | Vigilancia competitiva recurrente. Partners la dibuja en Mercado y la usa para generar la Estrategia | lee `brand_identities`/`client_interviews`/`market_studies`, escribe `market_findings` |
+| `04_estrategia.md` | Define objetivos → estrategias → conceptos con la Ficha + el estudio + la vigilancia + la Voz de marca, y llena la página **Estrategia** de Partners (el cliente la aprueba ahí). Única fuente de la Estrategia | lee `client_interviews`/`market_studies`/`market_findings`/`brand_identities`/`strategy_reviews`, escribe `strategy_nodes` y `strategy_reviews` |
 | `02_crearcronograma_V2.md` | Cronograma de contenido del mes — **el único plan mensual del sistema** | lee `brand_identities`/`client_interviews`/`strategy_nodes`/`strategy_reviews`/`market_findings`/`market_studies`, escribe `content_pieces` |
 | `03_generar.md` | Copy por red, prompt visual o guion de Reel, textos de láminas; corrige textos que el cliente devolvió | lee `content_pieces`/`market_*`/`brand_identities`/`client_interviews`, actualiza `content_pieces` |
 | `04_ensamblar.md` | Foto Magnific + montaje Canva, guardado permanente en Storage; corrige lo visual que el cliente devolvió; sube los videos de Reel | actualiza `content_pieces`, sube a Storage `content-pieces` |
@@ -19,7 +19,7 @@ Procesos de Claude Desktop (slash-commands) que investigan mercado y planifican 
 
 `06_reportar_cliente.md` — sigue apuntando al flujo viejo (local/Airtable). No lo uses asumiendo que está conectado a Partners.
 
-### Contrato de `strategy_nodes` (01b → Partners → 02)
+### Contrato de `strategy_nodes` (04_estrategia → Partners → 02_crearcronograma_V2)
 
 | Nivel | `type` | `parent_id` | Campos que Partners dibuja |
 |---|---|---|---|
@@ -31,25 +31,25 @@ Procesos de Claude Desktop (slash-commands) que investigan mercado y planifican 
 - `x`/`y` se dejan en 0: Partners acomoda el árbol solo; si el cliente mueve un nodo, Partners guarda las posiciones.
 - Ids: `<client_id>-o1-e2-c3`. Al escribir una estrategia nueva, `strategy_reviews.estado` vuelve a `Pendiente`; el cliente pone `Aprobada` o `Cambios solicitados` (+ `comentario`) desde Partners.
 
-### Contrato de `content_pieces` (02–05 y Partners)
+### Contrato de `content_pieces` (02_crearcronograma_V2 a 05_publicar, y Partners)
 
 Partners muestra `content_pieces` como **una línea de producción de 4 estaciones** (pasos 5 a 8); cada pieza está en una sola a la vez, y en cuál depende solo de estos campos:
 
 | Paso | Quién escribe | Qué debe dejar escrito | Estación en Partners |
 |---|---|---|---|
-| Cronograma | `02` | fila nueva; `estado_copy`/`estado_render`/`estado_publicado` = `'Pendiente'` (Reel → `estado_render = 'Producción externa'`); `estado_aprobacion` queda en `'Pendiente'` por defecto | 5. Planificación ("En producción") |
-| Copy | `03` | `copy_instagram`, `copy_linkedin`, `copy_pinterest`, `copy_gbp`, `copy_x`; `estado_copy = 'Listo'` | sigue en Planificación (pasa de "Copy" a "En diseño") |
-| Render | `04` | `url_imagen` (portada) y `url_piezas_finales` (lista JSON de URLs `https://`, una por lámina); `estado_render = '✅ Magnific + Canva'`. **Mientras `url_piezas_finales` esté vacío, la pieza sigue en Planificación y el cliente no puede aprobarla.** | 6. Validación ("Por revisar") |
+| Cronograma | `02_crearcronograma_V2` | fila nueva; `estado_copy`/`estado_render`/`estado_publicado` = `'Pendiente'` (Reel → `estado_render = 'Producción externa'`); `estado_aprobacion` queda en `'Pendiente'` por defecto | 5. Planificación ("En producción") |
+| Copy | `03_generar` | `copy_instagram`, `copy_linkedin`, `copy_pinterest`, `copy_gbp`, `copy_x`; `estado_copy = 'Listo'` | sigue en Planificación (pasa de "Copy" a "En diseño") |
+| Render | `04_ensamblar` | `url_imagen` (portada) y `url_piezas_finales` (lista JSON de URLs `https://`, una por lámina); `estado_render = '✅ Magnific + Canva'`. **Mientras `url_piezas_finales` esté vacío, la pieza sigue en Planificación y el cliente no puede aprobarla.** | 6. Validación ("Por revisar") |
 | Validación | **el cliente, desde Partners** | `estado_aprobacion` = `'Aprobado'` o `'Cambios solicitados'`, más `comentario_cliente`, `revisado_at`, `revisado_por`. Ninguna automatización debe escribir aquí, salvo lo de la fila siguiente. | Aprobado → 7. Publicación; Cambios → sigue en Validación ("Cambios pedidos") |
-| Corrección | `04` | si `estado_aprobacion = 'Cambios solicitados'`: leer `comentario_cliente`, re-renderizar, sobrescribir `url_imagen`/`url_piezas_finales` y **volver a poner `estado_aprobacion = 'Pendiente'`** (si no, la pieza se queda en "Cambios pedidos" aunque ya esté corregida). | vuelve a "Por revisar" |
-| Publicación | `05` | publicar **solo** filas con `estado_aprobacion = 'Aprobado'`, con `createScheduledPost` (programación directa); **nunca** con el flujo de revisión de Metricool (`createScheduledPostForReview`), o el cliente aprobaría dos veces. Al programar: `estado_publicado = '✅ Programado Metricool'`. | 7. Publicación ("Programada"); el día después de su `fecha` → 8. Repositorio ("Publicada") |
+| Corrección | `04_ensamblar` | si `estado_aprobacion = 'Cambios solicitados'`: leer `comentario_cliente`, re-renderizar, sobrescribir `url_imagen`/`url_piezas_finales` y **volver a poner `estado_aprobacion = 'Pendiente'`** (si no, la pieza se queda en "Cambios pedidos" aunque ya esté corregida). | vuelve a "Por revisar" |
+| Publicación | `05_publicar` | publicar **solo** filas con `estado_aprobacion = 'Aprobado'`, con `createScheduledPost` (programación directa); **nunca** con el flujo de revisión de Metricool (`createScheduledPostForReview`), o el cliente aprobaría dos veces. Al programar: `estado_publicado = '✅ Programado Metricool'`. | 7. Publicación ("Programada"); el día después de su `fecha` → 8. Repositorio ("Publicada") |
 
 
 Notas del contrato:
 - **Archivos:** `url_imagen` y `url_piezas_finales` siempre apuntan a Storage (`$SUPABASE_URL/storage/v1/object/public/content-pieces/<client_id>/<id>/<n>.png`), nunca a un enlace temporal de Canva o Magnific.
-- **Carrusel:** `03` escribe `texto_laminas` (`[{"lamina":2,"titulo","texto"},{"lamina":3,...}]`); `04` lo usa tal cual para las láminas 2–3.
-- **Reel:** el video se produce fuera del pipeline; `04` lo sube a Storage como `1.mp4` y marca `estado_render = '✅ Video externo'`. Partners lo muestra como video.
-- **Correcciones:** `03` corrige texto, `04` corrige lo visual; quien termine la corrección pone `estado_aprobacion = 'Pendiente'` (si hay de ambos tipos, lo hace `04` al final).
+- **Carrusel:** `03_generar` escribe `texto_laminas` (`[{"lamina":2,"titulo","texto"},{"lamina":3,...}]`); `04_ensamblar` lo usa tal cual para las láminas 2–3.
+- **Reel:** el video se produce fuera del pipeline; `04_ensamblar` lo sube a Storage como `1.mp4` y marca `estado_render = '✅ Video externo'`. Partners lo muestra como video.
+- **Correcciones:** `03_generar` corrige texto, `04_ensamblar` corrige lo visual; quien termine la corrección pone `estado_aprobacion = 'Pendiente'` (si hay de ambos tipos, lo hace `04_ensamblar` al final).
 ---
 
 ## ⚠️ Este repo depende del esquema real de Partners — revisar tras cada cambio ahí
@@ -60,8 +60,8 @@ Los procesos activos asumen nombres exactos de tablas, columnas, restricciones y
 
 - [ ] Nombres de tabla y columna usados en los `curl` (`clients`, `market_studies`, `market_findings`, `content_pieces`, `brand_identities`, `client_interviews`, `strategy_nodes`) — ¿siguen existiendo exactamente así?
 - [ ] Valores permitidos por restricciones `CHECK` (`cluster`, `confianza` en `market_findings`; `formato`, `pilar`, `marcador`, `estado_aprobacion` en `content_pieces`) — ¿la lista de valores sigue siendo la misma?
-- [ ] Campos JSON que la pantalla de Mercado dibuja (lista en la Fase 5 de `00_genesis_cliente.md`) — ¿el componente `MercadoView.tsx` de Partners sigue leyendo esas mismas claves? El generador de Estrategia (`backend_v2/app/services/strategy_context.py`) lee las mismas, así que una clave renombrada empobrece las dos cosas.
-- [ ] Nombres de canal en `market_findings.fuente` (lista en la Fase 5 de `01_escanearmercado.md`) — Mercado agrupa por ese texto exacto.
+- [ ] Campos JSON que la pantalla de Mercado dibuja (lista en la Fase 5 de `01_mercado_estudio.md`) — ¿el componente `MercadoView.tsx` de Partners sigue leyendo esas mismas claves? El generador de Estrategia (`backend_v2/app/services/strategy_context.py`) lee las mismas, así que una clave renombrada empobrece las dos cosas.
+- [ ] Nombres de canal en `market_findings.fuente` (lista en la Fase 5 de `03_mercado_vigilancia.md`) — Mercado agrupa por ese texto exacto.
 - [ ] Restricciones `UNIQUE` que algún `curl` asuma para `on_conflict` (ej. `market_studies.client_id`) — ¿siguen ahí si se recrea la tabla?
 - [ ] Cualquier mención a una columna/feature específica de Partners (ej. el extinto `clients.plan`) — si se elimina algo en Partners, buscar su nombre en estos 3 archivos y corregir la nota.
 - [ ] Nombres de las variables de entorno en Railway (`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`) — si alguna vez se renombran ahí, actualizar la nota de cada archivo que las menciona.
@@ -79,3 +79,4 @@ Forma rápida de auditar: `grep -rn "clients\.\|market_studies\.\|market_finding
 - **2026-10-03 (7)** — La Estrategia de Partners perdía su mejor contenido: el generador escribía `strategic_rationale`, `creative_hooks` y `execution_guidelines` pero no se guardaban, y cada autoguardado de la pantalla los borraba (por eso `02` siempre los recibía vacíos). Corregido; además abrir la pantalla ya no reescribe la estrategia. Los objetivos ahora tienen títulos concretos (antes todos se llamaban "Objetivo Principal/Secundario") y la prioridad va en `tags` (`principal`/`secundario`); las estrategias guardan su porqué en `description`. Nota agregada en la Fase 1 de `02`. Las estrategias existentes necesitan regenerarse para tener estos datos.
 - **2026-10-03 (8)** — La Estrategia deja de generarse con IA dentro de Partners (se quitaron el botón "Regenerar con IA" del Admin, sus endpoints y el generador). Nueva receta `01b_definir_estrategia.md`, entre 01 y 02: propone el árbol en el chat con la evidencia citada, espera el visto bueno y lo escribe en `strategy_nodes`. Nueva tabla `strategy_reviews` (el cliente aprueba o pide cambios en Partners; 01b tiene modo corrección y 02 avisa si la estrategia no está aprobada). `strategy_nodes.x`/`y` ahora valen 0 por defecto. Contrato arriba.
 - **2026-10-03 (9)** — La Voz de marca deja de generarse con IA dentro de Partners (se quitaron el botón "Generar voz desde la Ficha", "Regenerar", el endpoint `POST /api/admin/brands/{id}/manual` y su generador). Nueva receta `00b_definir_voz.md`, después de `00` (lee las reseñas y el Instagram de la competencia): propone dos direcciones, espera el visto bueno y escribe en `brand_identities` con `voz_estado = 'Pendiente'`; modo corrección cuando el cliente pide cambios. Orden nuevo del alta: Ficha → 00 → 00b → 01 → 01b → 02.
+- **2026-10-03 (10)** — Las recetas hasta Estrategia se renombraron con el nombre de la página de Partners que llenan, numeradas en el orden en que se corren: `00_genesis_cliente` → `01_mercado_estudio`, `00b_definir_voz` → `02_voz_de_marca`, `01_escanearmercado` → `03_mercado_vigilancia`, `01b_definir_estrategia` → `04_estrategia`. Las de contenido (`02_crearcronograma_V2` a `06_reportar_cliente`) conservan su nombre por ahora; por eso, mientras tanto, conviven dos recetas que empiezan con 02, 03 y 04: dentro de estos `.md` siempre se nombran completas. Los comandos cambian igual (ej. `/04_estrategia`). En Claude Desktop hay que reemplazar los archivos viejos por los nuevos.

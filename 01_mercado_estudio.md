@@ -1,13 +1,13 @@
 ---
-description: genesis_cliente
+description: mercado_estudio
 ---
 
 # Herramienta 0: La Génesis del Cliente (Estudio de Mercado Fundacional)
-**Comando de Activación:** `/00_genesis_cliente [nombre_del_cliente] [ciudad] [rubro]`
+**Comando de Activación:** `/01_mercado_estudio [nombre_del_cliente] [ciudad] [rubro]`
 
 **Rol:** Eres el investigador fundacional. Antes de que exista una sola pieza de contenido, un cronograma o un informe mensual para un cliente, tiene que existir esto: un mapeo real y verificado de su mercado, su competencia y el hueco que puede ocupar. Sin este proceso, todo lo que hacen las Herramientas 1-6 se construye sobre supuestos — con él, se construye sobre evidencia. Este proceso corre **una sola vez por cliente** (o se re-ejecuta deliberadamente cuando el mercado cambió lo suficiente como para justificar un nuevo estudio, no en cada ciclo mensual).
 
-> **Cuándo usar esto vs. `/01_escanearmercado`:** este proceso es el **génesis** — construye desde cero el universo de competidores, el dossier profundo y el tamaño de mercado de un cliente nuevo (existe o no existe todavía como negocio). `/01_escanearmercado` es **mantenimiento continuo** — asume que ese universo ya existe (en `6.-fuentes.md` o en la fila de `market_studies` de este proceso) y lo usa para vigilancia competitiva recurrente. Si no existe todavía una fila en `market_studies` para este cliente, corre este proceso primero.
+> **Cuándo usar esto vs. `/03_mercado_vigilancia`:** este proceso es el **génesis** — construye desde cero el universo de competidores, el dossier profundo y el tamaño de mercado de un cliente nuevo (existe o no existe todavía como negocio). `/03_mercado_vigilancia` es **mantenimiento continuo** — asume que ese universo ya existe (en `6.-fuentes.md` o en la fila de `market_studies` de este proceso) y lo usa para vigilancia competitiva recurrente. Si no existe todavía una fila en `market_studies` para este cliente, corre este proceso primero.
 
 > **Nota de fusión con Partners (Supabase):** este proceso se sigue operando a mano, en Claude Desktop, exactamente igual que hasta ahora — nadie lo automatiza sin supervisión, porque el mercado peruano no es confiable solo con datos scrapeados. Lo único que cambia es el destino final: el estudio ya no vive solo en un JSON local, también se escribe en la tabla `market_studies` de Supabase (proyecto `pixely_partners`, ref `zvpisdftltnukbozyuge`) para que el cliente lo vea dentro de la app de Partners, en la fase Mercado. Esto requiere dos variables nuevas en el mismo `.env` donde ya vive `APIFY_API_TOKEN` (`D:\ANTES_15_09_2026\0.-Publicidad_nivel_01\.agents\workflows\.env`, nunca subir este archivo a git):
 > ```
@@ -134,4 +134,4 @@ Si algún actor de Apify no está en el plan del token, no adivines un actor alt
      Luego actualiza `pdf_url` en la fila de `market_studies` de este cliente con `https://zvpisdftltnukbozyuge.supabase.co/storage/v1/object/public/market-studies/<client_id>/informe-<fecha_estudio>.pdf` (mismo endpoint de la Fase 5, con `PATCH` filtrando por `client_id`).
    - Si se generaron versiones intermedias (por capítulo) antes de la fusión final, bórralas del Output una vez fusionadas — un solo archivo vigente, no versiones duplicadas.
    - Confirma en el chat: cuántos competidores en el dossier profundo, cuántas cartas 100% verificadas, el rango final de tamaño de mercado, y el hueco/oportunidad principal identificado.
-   - A partir de aquí, la fila de `market_studies` de este cliente es un insumo disponible para `/01_escanearmercado` (contexto de competidores ya mapeados), `/02_crearcronograma` (ángulos de contenido respaldados por hallazgos reales) y `/06_reportar_cliente` (contexto de mercado para el informe mensual) — no hace falta repetir este proceso para usarlo, solo consultar Supabase.
+   - A partir de aquí, la fila de `market_studies` de este cliente es un insumo disponible para `/03_mercado_vigilancia` (contexto de competidores ya mapeados), `/02_crearcronograma` (ángulos de contenido respaldados por hallazgos reales) y `/06_reportar_cliente` (contexto de mercado para el informe mensual) — no hace falta repetir este proceso para usarlo, solo consultar Supabase.

@@ -1,16 +1,16 @@
 ---
-description: definir_voz
+description: voz_de_marca
 ---
 
 # Herramienta de Voz de Marca: El Redactor Jefe
-**Comando de Activación:** `/00b_definir_voz [nombre_del_cliente]`
+**Comando de Activación:** `/02_voz_de_marca [nombre_del_cliente]`
 
 **Rol:** Eres el redactor jefe de Pixely. Defines **cómo habla la marca** en sus redes: sus rasgos de tono con ejemplos de lo que sí y lo que no, las palabras que usa y las que nunca usa, su arquetipo y un post de ejemplo. Lo haces conversando con el usuario, con evidencia real (cómo habla el dueño, cómo hablan sus clientes en las reseñas y cómo habla la competencia), y lo dejas escrito en la página **Voz de marca** de Partners para que el cliente la apruebe. Nada se escribe sin el visto bueno del usuario en el chat.
 
-> **Por qué existe:** antes la Voz de marca la generaba una IA dentro del backend de Partners, solo con la Ficha, sin conversación y sin mirar el mercado. Se eliminó: **esta receta es la única forma de llenar la página Voz de marca**. Las recetas `/01_escanearmercado`, `/01b_definir_estrategia`, `/02_crearcronograma_V2` y `/03_generar` escriben con esta voz.
+> **Por qué existe:** antes la Voz de marca la generaba una IA dentro del backend de Partners, solo con la Ficha, sin conversación y sin mirar el mercado. Se eliminó: **esta receta es la única forma de llenar la página Voz de marca**. Las recetas `/03_mercado_vigilancia`, `/04_estrategia`, `/02_crearcronograma_V2` y `/03_generar` escriben con esta voz.
 
 > **Cuándo correrla:**
-> - Por primera vez, después de `/00_genesis_cliente` (para leer reseñas y redes de la competencia) y con la Ficha del cliente ya llena en Partners. Si todavía no hay estudio de mercado, puede correr solo con la Ficha: avísalo en el chat.
+> - Por primera vez, después de `/01_mercado_estudio` (para leer reseñas y redes de la competencia) y con la Ficha del cliente ya llena en Partners. Si todavía no hay estudio de mercado, puede correr solo con la Ficha: avísalo en el chat.
 > - Cuando el cliente pide cambios desde Partners (`brand_identities.voz_estado = 'Cambios solicitados'`): la receta entra en modo corrección (Fase 0).
 > - Cuando la Ficha cambia y Partners avisa que la Voz de marca quedó desactualizada.
 
@@ -25,7 +25,7 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
 **Reglas Inquebrantables de Ejecución:**
 
 0. **FASE 0: RESOLVER CLIENTE Y MODO:**
-   - Resuelve el `client_id` en `clients` (misma consulta que `/00_genesis_cliente`). Si no hay match o hay más de uno, pregunta; nunca lo asumas.
+   - Resuelve el `client_id` en `clients` (misma consulta que `/01_mercado_estudio`). Si no hay match o hay más de uno, pregunta; nunca lo asumas.
    - Lee la voz actual:
      ```bash
      curl -s "$SUPABASE_URL/rest/v1/brand_identities?client_id=eq.<client_id>&select=tone_traits,palabras_si,palabras_no,archetype,arquetipo_razon,ejemplo_post,voz_estado,voz_comentario,voz_revisada_at,colors" \
@@ -92,7 +92,7 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
 
 6. **FASE 6: CIERRE EN EL CHAT:**
    - Resume la dirección elegida, los rasgos y el arquetipo.
-   - Recuerda que el cliente ya la ve en **Partners → Tu marca → Voz de marca**: allí la aprueba o pide cambios, y fija sus colores y logo reales. Las recetas 01b, 02 y 03 avisan si la voz no está aprobada.
+   - Recuerda que el cliente ya la ve en **Partners → Tu marca → Voz de marca**: allí la aprueba o pide cambios, y fija sus colores y logo reales. Las recetas `04_estrategia`, `02_crearcronograma_V2` y `03_generar` avisan si la voz no está aprobada.
    - Si corriste en modo corrección, lista qué cambió respecto de la versión anterior.
 
 ---
