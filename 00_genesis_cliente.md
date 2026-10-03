@@ -79,11 +79,16 @@ Si algún actor de Apify no está en el plan del token, no adivines un actor alt
      cliente, ciudad, fecha_estudio, version, fecha_actualizacion,
      universo_competidores: { total_detectado_maps, total_relevante_filtrado, fuente, listado[] },
      dossier_profundo: [ { competidor, ficha_maps, carta_completa[], estadisticas_precio, instagram{}, opiniones_google_reales[] } ],
-     tamano_mercado: { datos_oficiales_base, metodo_top_down, metodo_bottom_up_*, cruce_de_metodos },
+     tamano_mercado: { datos_oficiales_base, metodo_top_down, metodo_bottom_up_*, cruce_de_metodos, rango_estimado },
      panorama_producto_precio: { tipos_de_producto, configuracion_de_insumos, rango_de_precios, variacion_geografica_de_precios, promociones_tipicas_detectadas },
      mapa_competidores_completo: {...},
      notas_metodologicas: { fuentes_*, formato_citas: "APA", limitaciones_honestas[] }
      ```
+   - **Campos que la pantalla de Mercado de Partners dibuja** (si faltan o cambian de nombre, esa sección simplemente no aparece — no se rompe, pero el cliente ve menos):
+     - `universo_competidores.listado[]`: cada competidor como `{ "nombre": "...", "rating": 4.6, "reseñas": 1240, "direccion": "...", "website": "..." }` — `rating` y `reseñas` **como números**, no texto. Alimentan el mapa competitivo (rating × reseñas).
+     - `dossier_profundo[].competidor` + `dossier_profundo[].estadisticas_precio`: `{ "min": 9, "max": 32, "promedio": 16.5 }` en soles, como números. Alimentan la "Arquitectura de precios".
+     - `tamano_mercado.rango_estimado`: `{ "min": 1200000, "max": 2800000, "moneda": "PEN", "periodo": "anual" }` — el resultado final del cruce de la Fase 4 en números, para que se muestre como cifra grande. `tamano_mercado.cruce_de_metodos` (texto) se muestra debajo como explicación.
+     - `panorama_producto_precio.promociones_tipicas_detectadas`: lista de textos cortos (`["2x1 en bebidas de 3 a 5 pm", ...]`).
    - **Todas las fuentes en formato APA**, sin excepción — es el estándar del cliente para este archivo hacia adelante.
    - El JSON local sigue siendo tu copia de trabajo (útil para depurar sin reconsultar APIs), pero **la fuente de verdad ahora es Supabase**: inserta o actualiza la fila de este cliente en `market_studies` (la tabla tiene una restricción `UNIQUE` sobre `client_id`; con `Prefer: resolution=merge-duplicates` **y** `on_conflict=client_id` en la URL, una re-ejecución para el mismo cliente actualiza esa fila en vez de crear una nueva — sin el parámetro `on_conflict`, Supabase compara contra el `id` interno, que siempre es nuevo, y termina duplicando igual):
      ```bash

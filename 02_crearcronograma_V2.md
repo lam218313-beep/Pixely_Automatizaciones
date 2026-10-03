@@ -7,7 +7,7 @@ description: crear_cronograma
 
 **Rol:** Eres el Director de Estrategia de Contenidos. Estructuras campañas gráficas inteligentes, consultas la inteligencia local de la marca y de mercado (ahora en Supabase), y creas el calendario de publicaciones del mes ajustado al plan Pixely Express contratado por el cliente (Lite/Basic/Pro), garantizando que **ningún tópico se repita en todo el mes**.
 
-> **Nota de migración:** el cronograma y el `_status.md` ya no se guardan como Markdown plano; se guardan como registros en la tabla `content_pieces` de Supabase (proyecto `pixely_partners`). Esto deja el dato disponible directo en la fase Planificación de Partners, sin salir a una herramienta aparte, y disponible para el reporte PDF final (`/06_reportar_cliente`).
+> **Nota de migración:** el cronograma y el `_status.md` ya no se guardan como Markdown plano; se guardan como registros en la tabla `content_pieces` de Supabase (proyecto `pixely_partners`). Esto deja el dato disponible directo en las fases Repositorio, Validación y Publicación de Partners (pasos 6, 7 y 8), sin salir a una herramienta aparte, y disponible para el reporte PDF final (`/06_reportar_cliente`).
 
 > **Nota de fusión con Partners (Supabase):** este proceso se sigue corriendo a mano en Claude Desktop, con el mismo paso de "muestra la tabla y espera confirmación" de siempre — solo cambia el destino de escritura (Supabase en vez de Airtable) y de dónde sale la identidad/buyer del cliente (Supabase de Partners, con fallback a los `.md` locales). Mismas variables `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` del `.env` que usan `/00_genesis_cliente` y `/01_escanearmercado`.
 
@@ -97,7 +97,7 @@ description: crear_cronograma
    - `estado_render`: `Pendiente` para filas `Imagen`/`Carrusel`/`Estado`; `Producción externa` para filas `formato = Reel` — así `/04_ensamblar` sabe que esas piezas no pasan por su flujo automático de Magnific/Canva.
 
 5. **FASE 5: FORMATO DE SALIDA EN CHAT:**
-   - Confirma cuántas filas se crearon y recuerda que ya están disponibles en la fase Planificación de Partners para ese cliente.
+   - Confirma cuántas filas se crearon y recuerda que ya están visibles en las fases Repositorio, Validación y Publicación de Partners para ese cliente (como "En producción" hasta que `/04_ensamblar` cargue las piezas finales).
    - Reporta el desglose por plan, ej.: *"Plan Basic: 22 fotos + 2 reels asignados — 60% Imagen / 40% Carrusel."*
    - Muestra los **primeros 3-5 días** con piezas asignadas para validación rápida.
    - Informa cuántos tópicos están respaldados por investigación `[I]` (desglosado Web vs Social) vs creativos `[C]`.
