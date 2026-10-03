@@ -12,7 +12,7 @@ description: genesis_cliente
 > **Nota de fusión con Partners (Supabase):** este proceso se sigue operando a mano, en Claude Desktop, exactamente igual que hasta ahora — nadie lo automatiza sin supervisión, porque el mercado peruano no es confiable solo con datos scrapeados. Lo único que cambia es el destino final: el estudio ya no vive solo en un JSON local, también se escribe en la tabla `market_studies` de Supabase (proyecto `pixely_partners`, ref `zvpisdftltnukbozyuge`) para que el cliente lo vea dentro de la app de Partners, en la fase Mercado. Esto requiere dos variables nuevas en el mismo `.env` donde ya vive `APIFY_API_TOKEN` (`D:\ANTES_15_09_2026\0.-Publicidad_nivel_01\.agents\workflows\.env`, nunca subir este archivo a git):
 > ```
 > SUPABASE_URL=https://zvpisdftltnukbozyuge.supabase.co
-> SUPABASE_SERVICE_KEY=<service role key, está en el backend de Railway como SUPABASE_KEY>
+> SUPABASE_SERVICE_KEY=<service role key — en Railway (proyecto pixely-partners, servicio backend, pestaña Variables) es la variable que se llama literalmente SUPABASE_SERVICE_KEY, NO la variable SUPABASE_KEY (esa es la llave pública/anon, un valor distinto y mucho más restringido). Si hace falta copiarla de nuevo, está en Supabase → Project Settings → API → "Legacy anon, service_role API keys" → fila service_role, botón Reveal.>
 > ```
 
 > **Nota de origen:** esta metodología nace de la ejecución real para World Tasty Burguer (dark kitchen nueva, Trujillo, sep. 2026) — cada fase abajo fue validada en producción, no es teoría.
@@ -85,9 +85,9 @@ Si algún actor de Apify no está en el plan del token, no adivines un actor alt
      notas_metodologicas: { fuentes_*, formato_citas: "APA", limitaciones_honestas[] }
      ```
    - **Todas las fuentes en formato APA**, sin excepción — es el estándar del cliente para este archivo hacia adelante.
-   - El JSON local sigue siendo tu copia de trabajo (útil para depurar sin reconsultar APIs), pero **la fuente de verdad ahora es Supabase**: inserta o actualiza la fila de este cliente en `market_studies` (usa `Prefer: resolution=merge-duplicates` para que una re-ejecución actualice en vez de duplicar):
+   - El JSON local sigue siendo tu copia de trabajo (útil para depurar sin reconsultar APIs), pero **la fuente de verdad ahora es Supabase**: inserta o actualiza la fila de este cliente en `market_studies` (la tabla tiene una restricción `UNIQUE` sobre `client_id`; con `Prefer: resolution=merge-duplicates` **y** `on_conflict=client_id` en la URL, una re-ejecución para el mismo cliente actualiza esa fila en vez de crear una nueva — sin el parámetro `on_conflict`, Supabase compara contra el `id` interno, que siempre es nuevo, y termina duplicando igual):
      ```bash
-     curl -s -X POST "$SUPABASE_URL/rest/v1/market_studies" \
+     curl -s -X POST "$SUPABASE_URL/rest/v1/market_studies?on_conflict=client_id" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
        -H "Content-Type: application/json" -H "Prefer: resolution=merge-duplicates,return=representation" \
        -d '{
