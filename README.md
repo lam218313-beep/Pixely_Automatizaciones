@@ -9,12 +9,15 @@ Procesos de Claude Desktop (slash-commands) que investigan mercado y planifican 
 | `00_genesis_cliente.md` | Estudio de mercado fundacional (una vez por cliente) | escribe `market_studies` |
 | `01_escanearmercado.md` | Vigilancia competitiva recurrente | lee `brand_identities`/`client_interviews`/`market_studies`, escribe `market_findings` |
 | `02_crearcronograma_V2.md` | Cronograma de contenido del mes — **el único plan mensual del sistema** | lee `brand_identities`/`client_interviews`/`strategy_nodes`/`market_findings`/`market_studies`, escribe `content_pieces` |
+| `03_generar.md` | Copy por red, prompt visual o guion de Reel, textos de láminas; corrige textos que el cliente devolvió | lee `content_pieces`/`market_*`/`brand_identities`/`client_interviews`, actualiza `content_pieces` |
+| `04_ensamblar.md` | Foto Magnific + montaje Canva, guardado permanente en Storage; corrige lo visual que el cliente devolvió; sube los videos de Reel | actualiza `content_pieces`, sube a Storage `content-pieces` |
+| `05_publicar.md` | Programa en Metricool solo lo que el cliente aprobó | lee y actualiza `content_pieces` |
 
-## Procesos sin terminar (no tocan Supabase todavía)
+## Proceso sin terminar (no toca Supabase todavía)
 
-`03_generar.md`, `04_ensamblar.md`, `05_publicar.md`, `06_reportar_cliente.md` — siguen apuntando al flujo viejo (local/Airtable). No los uses asumiendo que están conectados a Partners.
+`06_reportar_cliente.md` — sigue apuntando al flujo viejo (local/Airtable). No lo uses asumiendo que está conectado a Partners.
 
-### Contrato de `content_pieces` que deben cumplir 03–05 cuando se conecten
+### Contrato de `content_pieces` (02–05 y Partners)
 
 Partners muestra `content_pieces` como **una línea de producción de 4 estaciones** (pasos 5 a 8); cada pieza está en una sola a la vez, y en cuál depende solo de estos campos:
 
@@ -27,13 +30,19 @@ Partners muestra `content_pieces` como **una línea de producción de 4 estacion
 | Corrección | `04` | si `estado_aprobacion = 'Cambios solicitados'`: leer `comentario_cliente`, re-renderizar, sobrescribir `url_imagen`/`url_piezas_finales` y **volver a poner `estado_aprobacion = 'Pendiente'`** (si no, la pieza se queda en "Cambios pedidos" aunque ya esté corregida). | vuelve a "Por revisar" |
 | Publicación | `05` | publicar **solo** filas con `estado_aprobacion = 'Aprobado'`, con `createScheduledPost` (programación directa); **nunca** con el flujo de revisión de Metricool (`createScheduledPostForReview`), o el cliente aprobaría dos veces. Al programar: `estado_publicado = '✅ Programado Metricool'`. | 7. Publicación ("Programada"); el día después de su `fecha` → 8. Repositorio ("Publicada") |
 
+
+Notas del contrato:
+- **Archivos:** `url_imagen` y `url_piezas_finales` siempre apuntan a Storage (`$SUPABASE_URL/storage/v1/object/public/content-pieces/<client_id>/<id>/<n>.png`), nunca a un enlace temporal de Canva o Magnific.
+- **Carrusel:** `03` escribe `texto_laminas` (`[{"lamina":2,"titulo","texto"},{"lamina":3,...}]`); `04` lo usa tal cual para las láminas 2–3.
+- **Reel:** el video se produce fuera del pipeline; `04` lo sube a Storage como `1.mp4` y marca `estado_render = '✅ Video externo'`. Partners lo muestra como video.
+- **Correcciones:** `03` corrige texto, `04` corrige lo visual; quien termine la corrección pone `estado_aprobacion = 'Pendiente'` (si hay de ambos tipos, lo hace `04` al final).
 ---
 
 ## ⚠️ Este repo depende del esquema real de Partners — revisar tras cada cambio ahí
 
-Los 3 procesos activos asumen nombres exactos de tablas, columnas, restricciones y variables de entorno que viven en **otro repositorio** (`lam218313-beep/Pixely`, el backend/frontend de Partners). Nada sincroniza esto automáticamente — si algo cambia en Partners y nadie revisa estos `.md`, quedan desactualizados en silencio (ya pasó una vez: ver Changelog abajo).
+Los procesos activos asumen nombres exactos de tablas, columnas, restricciones y variables de entorno que viven en **otro repositorio** (`lam218313-beep/Pixely`, el backend/frontend de Partners). Nada sincroniza esto automáticamente — si algo cambia en Partners y nadie revisa estos `.md`, quedan desactualizados en silencio (ya pasó una vez: ver Changelog abajo).
 
-**Cada vez que se modifique el esquema de Supabase o se quite/renombre algo en Partners, volver a verificar en los 3 archivos:**
+**Cada vez que se modifique el esquema de Supabase o se quite/renombre algo en Partners, volver a verificar en los archivos activos:**
 
 - [ ] Nombres de tabla y columna usados en los `curl` (`clients`, `market_studies`, `market_findings`, `content_pieces`, `brand_identities`, `client_interviews`, `strategy_nodes`) — ¿siguen existiendo exactamente así?
 - [ ] Valores permitidos por restricciones `CHECK` (`cluster`, `confianza` en `market_findings`; `formato`, `pilar`, `marcador`, `estado_aprobacion` en `content_pieces`) — ¿la lista de valores sigue siendo la misma?
@@ -49,3 +58,4 @@ Forma rápida de auditar: `grep -rn "clients\.\|market_studies\.\|market_finding
 - **2026-10-03** — `00_genesis_cliente.md` decía que la `SUPABASE_SERVICE_KEY` "está en Railway como `SUPABASE_KEY`" (es la llave anon, un valor distinto); `02_crearcronograma_V2.md` decía que "Partners ya guarda el plan contratado en `clients.plan`" (esa columna fue eliminada por completo); y el `POST` a `market_studies` usaba `Prefer: resolution=merge-duplicates` sin que la tabla tuviera una restricción `UNIQUE (client_id)` ni el `curl` incluyera `on_conflict=client_id`, así que cada re-ejecución duplicaba la fila en vez de actualizarla. Se corrigieron los 3 y se agregó la restricción `UNIQUE` en Supabase.
 - **2026-10-03 (2)** — Partners agregó las fases Repositorio, Validación y Publicación (leen `content_pieces`) y nuevas columnas de revisión del cliente (`estado_aprobacion`, `comentario_cliente`, `revisado_at`, `revisado_por`); la fase Beneficios se eliminó. `02_crearcronograma_V2.md` decía que las piezas aparecían en "la fase Planificación de Partners" (esa fase lee `tasks`, no `content_pieces`) — corregido. La pantalla de Mercado se rediseñó y ahora dibuja `tamano_mercado.rango_estimado` y los números de `listado`/`estadisticas_precio` — documentado en la Fase 5 de `00_genesis_cliente.md`. Se agregó arriba el contrato que deberán cumplir 03–05 (sin editar esos archivos todavía).
 - **2026-10-03 (3)** — Había **dos planes mensuales en paralelo**: el de `02` (`content_pieces`) y otro que Partners generaba con IA desde su panel de Admin (tabla `tasks`, mostrado como Kanban en Planificación, con su propio flujo de aprobación). Se eliminó el segundo por completo (vistas, endpoints `/planning` y `/tasks`, generador): `content_pieces` es ahora el único plan y Planificación lo muestra. Como el generador eliminado se basaba en la estrategia de Partners, `02` ahora lee `strategy_nodes` en su Fase 1. Además, los pasos 6–8 se reordenaron (Validación → Publicación → Repositorio) para que cada pieza esté en una sola estación; ver la columna "Estación en Partners" del contrato. La tabla `tasks` sigue en la base de datos, sin uso.
+- **2026-10-03 (4)** — Se conectaron `03`, `04` y `05` a Supabase (antes leían y escribían Airtable). Para eso se agregaron en Supabase la columna `content_pieces.texto_laminas` (textos de las láminas 2–3 del carrusel, de `03` a `04`) y el bucket público de Storage `content-pieces` (los enlaces de Canva/Magnific caducan en horas; el archivo del Repositorio debe durar meses). `03` y `04` ahora atienden también la cola de correcciones del cliente (`Cambios solicitados`), cada uno su parte (texto / visual), y devuelven la pieza a `Pendiente` al corregirla. `05` publica solo lo `Aprobado`, ya sin turnos Mañana/Tarde/Noche, e incluye Instagram (post, carrusel, historia o reel según el formato). El comando pasó a ser `/05_publicar`.
