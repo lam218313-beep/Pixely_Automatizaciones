@@ -49,7 +49,7 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
      **Sin Ficha no hay estrategia:** si no existe, detente y pide que el cliente la llene en Partners.
    - **Estudio de mercado** (`market_studies`, de `/00_genesis_cliente`): `tamano_mercado.rango_estimado`, `universo_competidores.listado` (rating y reseñas), `dossier_profundo[].estadisticas_precio`, `panorama_producto_precio.promociones_tipicas_detectadas`, y las `notas_metodologicas.limitaciones_honestas`.
    - **Vigilancia** (`market_findings`, de `/01_escanearmercado`): ordénalos por `confianza` (Alta → Media → Baja) y luego por `fecha` (más recientes primero).
-   - **Voz de marca** (`brand_identities`: `archetype`, `tone_traits`, `palabras_si`, `palabras_no`, `voz_estado`): los ganchos y textos de esta receta se escriben con esa voz y nunca usan `palabras_no`.
+   - **Voz de marca** (`brand_identities`: `archetype`, `tone_traits`, `palabras_si`, `palabras_no`, `voz_estado`): los ganchos y textos de esta receta se escriben con esa voz y nunca usan `palabras_no`. Si no hay voz, o `voz_estado` no es `Aprobada`, avisa: lo ideal es correr antes `/00b_definir_voz` y que el cliente la apruebe. Sigue solo si el usuario lo confirma.
    - **Volumen contratado:** `[Cliente]/Inputs/docs/7.-plan_contratado.md` (`fotos_mes`, `reels_mes`), la misma fuente que usa `/02_crearcronograma_V2`.
    - Si no hay estudio de mercado **ni** hallazgos, avísalo: una estrategia sin mercado es una hipótesis. Sigue solo si el usuario lo confirma, y dilo en el porqué de cada objetivo.
 
