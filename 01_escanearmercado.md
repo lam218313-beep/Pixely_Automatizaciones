@@ -110,7 +110,7 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
 
 5. **FASE 5: SÍNTESIS Y REGISTRO ESTRUCTURADO:**
    - No redactes un resumen en prosa. Convierte cada hallazgo accionable en **una fila de datos** con esta estructura:
-     `Fecha | Cliente | Fuente (Web/Instagram/TikTok) | Tema | Dato o Ángulo | Evidencia/Cita | Cluster (Problema/Identidad/Prueba) | Confianza (Alta/Media/Baja) | Tipo de Señal | Competidor | Link`
+     `Fecha | Cliente | Fuente (canal) | Tema | Dato o Ángulo | Evidencia/Cita | Cluster (Problema/Identidad/Prueba) | Confianza (Alta/Media/Baja) | Tipo de Señal | Competidor | Link`
    - **Obligación de Escritura:** inserta estas filas en la tabla `market_findings` de Supabase, filtradas por el `client_id` resuelto en la Fase 0 — es una tabla única compartida por todos los clientes (ya no hace falta crear una base ni una tabla por cliente, como con Airtable). Insértalas todas de una vez con un arreglo JSON:
      ```bash
      curl -s -X POST "$SUPABASE_URL/rest/v1/market_findings" \
@@ -124,6 +124,7 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
        ]'
      ```
      Los nombres de columna son los mismos campos en minúsculas y sin tildes (`tipo_senal`, no `Tipo de Señal`) — `cluster` y `confianza` tienen una restricción `check` en la tabla, así que deben venir exactamente como `Problema`/`Identidad`/`Prueba` y `Alta`/`Media`/`Baja`.
+     `fuente` es solo el nombre del canal, siempre escrito igual: `Instagram`, `TikTok`, `Facebook`, `Meta Ad Library`, `Google Maps`, `Web` o `Medios` (prensa, gremios, estudios). Nunca le agregues el @ del perfil ni la URL: esos van en `competidor` y `link`. La pantalla de Mercado de Partners agrupa los hallazgos por este texto en "¿Dónde se mueve tu mercado?", así que "Instagram" e "Instagram @rival" saldrían como dos canales distintos.
 
 6. **FASE 6: FEEDBACK Y CONFIRMACIÓN EN CHAT:**
    - Notifica cuántas filas se escribieron, desglosadas por Confianza (Alta/Media/Baja) y por Tipo de Señal.

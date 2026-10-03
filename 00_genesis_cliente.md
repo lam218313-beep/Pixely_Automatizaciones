@@ -85,8 +85,9 @@ Si algún actor de Apify no está en el plan del token, no adivines un actor alt
      notas_metodologicas: { fuentes_*, formato_citas: "APA", limitaciones_honestas[] }
      ```
    - **Campos que la pantalla de Mercado de Partners dibuja** (si faltan o cambian de nombre, esa sección simplemente no aparece — no se rompe, pero el cliente ve menos):
-     - `universo_competidores.listado[]`: cada competidor como `{ "nombre": "...", "rating": 4.6, "reseñas": 1240, "direccion": "...", "website": "..." }` — `rating` y `reseñas` **como números**, no texto. Alimentan el mapa competitivo (rating × reseñas).
-     - `dossier_profundo[].competidor` + `dossier_profundo[].estadisticas_precio`: `{ "min": 9, "max": 32, "promedio": 16.5 }` en soles, como números. Alimentan la "Arquitectura de precios".
+     - `universo_competidores.listado[]`: cada competidor como `{ "nombre": "...", "rating": 4.6, "reseñas": 1240, "direccion": "...", "website": "..." }` — `rating` y `reseñas` **como números**, no texto. Alimentan el medidor "¿Qué tan exigente es tu mercado?", el ranking "¿Quiénes lideran tu mercado?" y el mapa competitivo (rating × reseñas).
+     - `universo_competidores.total_relevante_filtrado` y `universo_competidores.total_detectado_maps`, como números: la cifra "Competidores directos — de N negocios en Google Maps".
+     - `dossier_profundo[].competidor` + `dossier_profundo[].estadisticas_precio`: `{ "min": 9, "max": 32, "promedio": 16.5 }` en soles, como números. Alimentan "¿Cuánto cobra tu competencia?" y el ticket promedio del mercado.
      - `tamano_mercado.rango_estimado`: `{ "min": 1200000, "max": 2800000, "moneda": "PEN", "periodo": "anual" }` — el resultado final del cruce de la Fase 4 en números, para que se muestre como cifra grande. `tamano_mercado.cruce_de_metodos` (texto) se muestra debajo como explicación.
      - `panorama_producto_precio.promociones_tipicas_detectadas`: lista de textos cortos (`["2x1 en bebidas de 3 a 5 pm", ...]`).
    - **Todas las fuentes en formato APA**, sin excepción — es el estándar del cliente para este archivo hacia adelante.
