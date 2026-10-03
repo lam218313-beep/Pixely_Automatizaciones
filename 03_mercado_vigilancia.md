@@ -111,7 +111,8 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
 5. **FASE 5: SÍNTESIS Y REGISTRO ESTRUCTURADO:**
    - No redactes un resumen en prosa. Convierte cada hallazgo accionable en **una fila de datos** con esta estructura:
      `Fecha | Cliente | Fuente (canal) | Tema | Dato o Ángulo | Evidencia/Cita | Cluster (Problema/Identidad/Prueba) | Confianza (Alta/Media/Baja) | Tipo de Señal | Competidor | Link`
-   - **Obligación de Escritura:** inserta estas filas en la tabla `market_findings` de Supabase, filtradas por el `client_id` resuelto en la Fase 0 — es una tabla única compartida por todos los clientes (ya no hace falta crear una base ni una tabla por cliente, como con Airtable). Insértalas todas de una vez con un arreglo JSON:
+   - **Muestra antes de escribir y espera confirmación (obligatorio):** presenta en el chat todas las filas como tabla (Tema · Dato o Ángulo · Competidor · Cluster · Confianza · Fuente), ordenadas de `Alta` a `Baja`, con el total por confianza. Termina con: *"¿Las escribo en Partners así, o quitamos o corregimos alguna?"*. **No escribas nada** hasta un sí explícito: el usuario puede quitar filas, cambiar su cluster o bajar su confianza. Itera las veces que haga falta. Lo que se escribe aquí lo ve el cliente en Mercado y lo usan `/04_estrategia` y `/02_crearcronograma_V2`.
+   - **Obligación de Escritura (solo tras el sí):** inserta estas filas en la tabla `market_findings` de Supabase, filtradas por el `client_id` resuelto en la Fase 0 — es una tabla única compartida por todos los clientes (ya no hace falta crear una base ni una tabla por cliente, como con Airtable). Insértalas todas de una vez con un arreglo JSON:
      ```bash
      curl -s -X POST "$SUPABASE_URL/rest/v1/market_findings" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
@@ -127,6 +128,6 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
      `fuente` es solo el nombre del canal, siempre escrito igual: `Instagram`, `TikTok`, `Facebook`, `Meta Ad Library`, `Google Maps`, `Web` o `Medios` (prensa, gremios, estudios). Nunca le agregues el @ del perfil ni la URL: esos van en `competidor` y `link`. La pantalla de Mercado de Partners agrupa los hallazgos por este texto en "¿Dónde se mueve tu mercado?", así que "Instagram" e "Instagram @rival" saldrían como dos canales distintos.
 
 6. **FASE 6: FEEDBACK Y CONFIRMACIÓN EN CHAT:**
-   - Notifica cuántas filas se escribieron, desglosadas por Confianza (Alta/Media/Baja) y por Tipo de Señal.
+   - Confirma que se escribieron las filas aprobadas (verifica con un `GET`) y notifica cuántas, desglosadas por Confianza (Alta/Media/Baja) y por Tipo de Señal.
    - Muestra en el chat las hipótesis socráticas, el hallazgo de mayor confianza de cada competidor, y el gap diferenciador identificado en la Fase 4.
    - Si la Fase 0-B detectó candidatos nuevos (`Nuevo-competidor-detectado`), lístalos aparte y sugiere si alguno amerita un `/01_mercado_estudio` de refresco — es solo una sugerencia en el chat, nunca lo dispares automáticamente ni edites la fila de `market_studies` desde aquí.
