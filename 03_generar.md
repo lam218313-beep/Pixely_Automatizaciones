@@ -7,7 +7,7 @@ description: generar_contenido
 
 **Rol:** Eres un Copywriter Senior y Director de Arte Conceptual. Produces el mes completo de copies, prompts visuales y guiones de Reel en una sola ejecución masiva, garantizando que cada pieza sea distinta a todas las demás del lote.
 
-> **Nota de fusión con Partners (Supabase):** cada pieza (Imagen, Carrusel, Estado o Reel) es una **fila de `content_pieces`** en Supabase, la misma tabla que crea `/02_crearcronograma_V2` y que el cliente ve en Partners. El copy, los 4 parámetros visuales, el prompt visual (o el guion, si es Reel) y los textos de láminas del carrusel se escriben como **columnas de esa fila**. Ya no se usa Airtable. Mismas variables del `.env` que `/01_mercado_estudio`: `SUPABASE_URL` y la service key cargada en `$SUPABASE_KEY`:
+> **Nota de fusión con Partners (Supabase):** cada pieza (Imagen, Carrusel, Estado o Reel) es una **fila de `content_pieces`** en Supabase, la misma tabla que crea `/05_planificacion` y que el cliente ve en Partners. El copy, los 4 parámetros visuales, el prompt visual (o el guion, si es Reel) y los textos de láminas del carrusel se escriben como **columnas de esa fila**. Ya no se usa Airtable. Mismas variables del `.env` que `/01_mercado_estudio`: `SUPABASE_URL` y la service key cargada en `$SUPABASE_KEY`:
 > ```bash
 > SUPABASE_URL=$(grep SUPABASE_URL "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
 > SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
@@ -17,7 +17,7 @@ description: generar_contenido
 ---
 
 > **PREREQUISITO DEL SISTEMA (CRÍTICO):**
-> Deben existir en `content_pieces` las filas del mes de este cliente, creadas por `/02_crearcronograma_V2` (la cantidad depende del plan contratado — Lite/Basic/Pro, ver `7.-plan_contratado.md`).
+> Deben existir en `content_pieces` las filas del mes de este cliente, creadas por `/05_planificacion` (la cantidad depende del plan contratado — Lite/Basic/Pro, ver `7.-plan_contratado.md`).
 > **Ejemplo:** `/03_generar Pixely Octubre`
 
 ---
@@ -27,7 +27,13 @@ description: generar_contenido
 1. **FASE 1: CARGA DE INTELIGENCIA (Una sola vez al inicio):**
 
    **Paso A — Lectura de la cola de trabajo (dos colas):**
-   - Resuelve el `client_id` igual que en `/02_crearcronograma_V2` (consulta a `clients`).
+   - Resuelve el `client_id` igual que en `/05_planificacion` (consulta a `clients`).
+   - **¿El cliente aprobó el plan del mes?** Antes de redactar la Cola 1, revisa `plan_reviews`:
+     ```bash
+     curl -s "$SUPABASE_URL/rest/v1/plan_reviews?client_id=eq.<client_id>&mes=eq.YYYY-MM&select=estado,comentario" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+     ```
+     Si `estado` no es `Aprobado` (o no hay fila), avisa antes de escribir copy nuevo: si es `Cambios solicitados`, muestra el `comentario` y sugiere correr primero `/05_planificacion`. Sigue solo si el usuario lo confirma. La Cola 2 (correcciones de piezas ya aprobadas) no depende de esto.
    - **Cola 1, copy nuevo:** las filas del mes con `estado_copy = Pendiente` (fila = registro con su `id`):
      ```bash
      curl -s "$SUPABASE_URL/rest/v1/content_pieces?client_id=eq.<client_id>&fecha=gte.YYYY-MM-01&fecha=lt.<primer día del mes siguiente>&estado_copy=eq.Pendiente&order=fecha.asc&select=*" \
@@ -42,7 +48,7 @@ description: generar_contenido
    - **Nunca toques filas ya aprobadas** (`estado_aprobacion = Aprobado`): el cliente ya dio su visto bueno a ese texto.
 
    **Paso B — Carga de Evidencia (Supabase):**
-   - `market_findings` y `market_studies` de este `client_id` (mismas consultas que `/02_crearcronograma_V2`, Fase 1). Construye tu banco de datos: estadísticas, citas, hallazgos de Instagram/TikTok, promociones detectadas. Si un tópico no tiene evidencia directa, apóyate en `client_interviews.data` (info comercial y buyer) o, si falta, en `3.-inputs_comercial.md` y `4.-buyer.md`.
+   - `market_findings` y `market_studies` de este `client_id` (mismas consultas que `/05_planificacion`, Fase 1). Construye tu banco de datos: estadísticas, citas, hallazgos de Instagram/TikTok, promociones detectadas. Si un tópico no tiene evidencia directa, apóyate en `client_interviews.data` (info comercial y buyer) o, si falta, en `3.-inputs_comercial.md` y `4.-buyer.md`.
 
    **Paso C — Tono y Voz:**
    - **Voz de marca** (`brand_identities`: `tone_traits`, `palabras_si`, `palabras_no`, `archetype`, `ejemplo_post`, `voz_estado`) y el buyer de `client_interviews.data` como filtro de estilo para todas las piezas:
@@ -82,7 +88,7 @@ description: generar_contenido
 
    **Paso A: Redacción Multicanal con Evidencia**
    - Mezcla el tópico con la evidencia del banco de datos. Un dato real (Web o Social) vale 3x más que una afirmación genérica.
-   - **Ramifica según `Formato` de la fila (ver nota de fusión Nivel 01→02 en `/02_crearcronograma_V2` — el Formato ya no está atado a un turno del día, es una decisión dinámica por ángulo):**
+   - **Ramifica según `Formato` de la fila (ver **Formatos** en `/05_planificacion`: el Formato lo decide el plan según el concepto y el ángulo):**
      - `Imagen` y `Estado`: un solo copy corto y directo, como antes. Redacta las 4 plataformas (Pinterest, X, LinkedIn, GBP) + Instagram.
      - `Carrusel`: `copy_instagram` lleva SOLO el caption breve (2-3 líneas que inviten a deslizar, según `5.-formato.md`) — la información pesada va en el texto de las láminas, que se guarda en la columna `texto_laminas` para que `/04_ensamblar` lo use en las plantillas Canva: `[{"lamina": 2, "titulo": "...", "texto": "el dato/tensión con su fuente"}, {"lamina": 3, "titulo": "...", "texto": "la conexión con el buyer"}]`. Redacta también las 4 plataformas.
      - `Reel`: es contenido nativo de Instagram/TikTok — redacta **solo** `Copy Instagram` (caption corta: gancho textual + CTA) y deja Pinterest/X/LinkedIn/GBP vacíos en esa fila. El guion completo del video va aparte, en el Paso B.

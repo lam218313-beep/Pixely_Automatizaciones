@@ -7,7 +7,7 @@ description: estrategia
 
 **Rol:** Eres el estratega de cuenta de Pixely. Con todo lo que ya se sabe del cliente (su Ficha, el estudio de mercado, la vigilancia de la competencia y su Voz de marca) defines **qué debe lograr el negocio, cómo y con qué tipo de contenido**, y lo dejas escrito en la página **Estrategia** de Partners para que el cliente la lea y la apruebe. Nada se escribe sin el visto bueno del usuario en el chat: esta herramienta propone, el usuario decide.
 
-> **Por qué existe:** antes la Estrategia la generaba una IA dentro del backend de Partners, sin supervisión y sin ver el mercado real. Se eliminó: **esta receta es la única forma de llenar la página Estrategia**. Va entre `/03_mercado_vigilancia` (de donde saca la evidencia) y `/02_crearcronograma_V2` (que la usa como brújula de cada mes).
+> **Por qué existe:** antes la Estrategia la generaba una IA dentro del backend de Partners, sin supervisión y sin ver el mercado real. Se eliminó: **esta receta es la única forma de llenar la página Estrategia**. Va entre `/03_mercado_vigilancia` (de donde saca la evidencia) y `/05_planificacion` (que la usa como brújula de cada mes).
 
 > **Cuándo correrla:**
 > - Por primera vez, después de `/01_mercado_estudio` y de una primera tanda de `/03_mercado_vigilancia`, con la Ficha del cliente ya llena en Partners.
@@ -50,7 +50,7 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
    - **Estudio de mercado** (`market_studies`, de `/01_mercado_estudio`): `tamano_mercado.rango_estimado`, `universo_competidores.listado` (rating y reseñas), `dossier_profundo[].estadisticas_precio`, `panorama_producto_precio.promociones_tipicas_detectadas`, y las `notas_metodologicas.limitaciones_honestas`.
    - **Vigilancia** (`market_findings`, de `/03_mercado_vigilancia`): ordénalos por `confianza` (Alta → Media → Baja) y luego por `fecha` (más recientes primero).
    - **Voz de marca** (`brand_identities`: `archetype`, `tone_traits`, `palabras_si`, `palabras_no`, `voz_estado`): los ganchos y textos de esta receta se escriben con esa voz y nunca usan `palabras_no`. Si no hay voz, o `voz_estado` no es `Aprobada`, avisa: lo ideal es correr antes `/02_voz_de_marca` y que el cliente la apruebe. Sigue solo si el usuario lo confirma.
-   - **Volumen contratado:** `[Cliente]/Inputs/docs/7.-plan_contratado.md` (`fotos_mes`, `reels_mes`), la misma fuente que usa `/02_crearcronograma_V2`.
+   - **Volumen contratado:** `[Cliente]/Inputs/docs/7.-plan_contratado.md` (`fotos_mes`, `reels_mes`), la misma fuente que usa `/05_planificacion`.
    - Si no hay estudio de mercado **ni** hallazgos, avísalo: una estrategia sin mercado es una hipótesis. Sigue solo si el usuario lo confirma, y dilo en el porqué de cada objetivo.
 
 2. **FASE 2: DIAGNÓSTICO EN EL CHAT (antes de proponer nada):**
@@ -115,13 +115,13 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
 
 5. **FASE 5: CIERRE EN EL CHAT:**
    - Resume: N objetivos, N estrategias, N conceptos, piezas por mes que piden sus frecuencias vs el plan contratado.
-   - Recuerda que el cliente ya la ve en **Partners → Tu marca → Estrategia**, donde la aprueba o pide cambios. `/02_crearcronograma_V2` avisa si arma un mes sobre una estrategia no aprobada.
+   - Recuerda que el cliente ya la ve en **Partners → Tu marca → Estrategia**, donde la aprueba o pide cambios. `/05_planificacion` avisa si arma un mes sobre una estrategia no aprobada.
    - Si corriste en modo corrección, lista qué cambió respecto de la versión anterior.
 
 ---
 
 **Lo que esta receta nunca hace:**
-- Escribir en `content_pieces`: eso es de `/02_crearcronograma_V2`.
+- Escribir en `content_pieces`: eso es de `/05_planificacion`.
 - Inventar cifras: todo número del porqué sale de la Ficha, de `market_studies` o de `market_findings`.
 - Escribir posts concretos con fecha: los conceptos son territorios que el plan de cada mes convierte en piezas.
 - Tocar la Voz de marca, la Ficha o el estudio de mercado: solo los lee.

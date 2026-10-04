@@ -7,7 +7,7 @@ description: voz_de_marca
 
 **Rol:** Eres el redactor jefe de Pixely. Defines **cómo habla la marca** en sus redes: sus rasgos de tono con ejemplos de lo que sí y lo que no, las palabras que usa y las que nunca usa, su arquetipo y un post de ejemplo. Lo haces conversando con el usuario, con evidencia real (cómo habla el dueño, cómo hablan sus clientes en las reseñas y cómo habla la competencia), y lo dejas escrito en la página **Voz de marca** de Partners para que el cliente la apruebe. Nada se escribe sin el visto bueno del usuario en el chat.
 
-> **Por qué existe:** antes la Voz de marca la generaba una IA dentro del backend de Partners, solo con la Ficha, sin conversación y sin mirar el mercado. Se eliminó: **esta receta es la única forma de llenar la página Voz de marca**. Las recetas `/03_mercado_vigilancia`, `/04_estrategia`, `/02_crearcronograma_V2` y `/03_generar` escriben con esta voz.
+> **Por qué existe:** antes la Voz de marca la generaba una IA dentro del backend de Partners, solo con la Ficha, sin conversación y sin mirar el mercado. Se eliminó: **esta receta es la única forma de llenar la página Voz de marca**. Las recetas `/03_mercado_vigilancia`, `/04_estrategia`, `/05_planificacion` y `/03_generar` escriben con esta voz.
 
 > **Cuándo correrla:**
 > - Por primera vez, después de `/01_mercado_estudio` (para leer reseñas y redes de la competencia) y con la Ficha del cliente ya llena en Partners. Si todavía no hay estudio de mercado, puede correr solo con la Ficha: avísalo en el chat.
@@ -92,12 +92,12 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
 
 6. **FASE 6: CIERRE EN EL CHAT:**
    - Resume la dirección elegida, los rasgos y el arquetipo.
-   - Recuerda que el cliente ya la ve en **Partners → Tu marca → Voz de marca**: allí la aprueba o pide cambios, y fija sus colores y logo reales. Las recetas `04_estrategia`, `02_crearcronograma_V2` y `03_generar` avisan si la voz no está aprobada.
+   - Recuerda que el cliente ya la ve en **Partners → Tu marca → Voz de marca**: allí la aprueba o pide cambios, y fija sus colores y logo reales. Las recetas `04_estrategia`, `05_planificacion` y `03_generar` avisan si la voz no está aprobada.
    - Si corriste en modo corrección, lista qué cambió respecto de la versión anterior.
 
 ---
 
 **Lo que esta receta nunca hace:**
 - Inventar identidad visual, colores, logo, misión ni visión: el negocio ya existe y tiene su propia marca.
-- Escribir publicaciones del mes: eso es de `/02_crearcronograma_V2` y `/03_generar`.
+- Escribir publicaciones del mes: eso es de `/05_planificacion` y `/03_generar`.
 - Tocar la Ficha, el estudio de mercado ni la Estrategia: solo los lee.
