@@ -71,15 +71,16 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
 3. **FASE 3: ARMAR EL PLAN, PIEZA POR PIEZA:**
    - **Fechas:** reparte las piezas a lo largo del mes de la forma más uniforme posible (ej. 24 piezas en 30 días ≈ una cada 1,25 días). Ubica primero los Reels, repartidos y no agrupados. Que un mismo concepto no salga dos días seguidos.
    - **Para cada pieza:**
-     1. Toma un concepto según el reparto de la Fase 2.
+     1. Toma un concepto según el reparto de la Fase 2. Ese es su **concepto principal**. Si el ángulo sirve de verdad a otro concepto (del mismo objetivo o de otro), puede **combinarlo** con uno más, como máximo; la pieza sigue contando para el reparto solo en su concepto principal.
      2. Elige un **ángulo único** dentro de ese concepto: primero un hallazgo de la evidencia (`[I]`, de `Alta` a `Baja`, nunca `Baja` como primera opción), y si no hay, una idea creativa propia (`[C]`). Un hallazgo `Competidor-pagado` es evidencia especialmente fuerte.
      3. Asigna el **pilar** según el ángulo: Problema (fricción o dolor), Identidad (quiénes somos, conexión) o Prueba (resultados, testimonios, conversión). Al final ningún pilar debe quedar por debajo del 20% del mes.
      4. **Verifica que el ángulo no repita** ninguno del mes ni de los dos meses anteriores (léelos de `content_pieces`). Si se parece demasiado, toma otro.
      5. Redacta el **tópico** en una línea, con la Voz de marca.
      6. Si es `[I]`, anota la **evidencia** en una línea: el dato y su fuente (ej. "3 competidores venden suscripción mensual (Google Maps, 1 oct)").
+     7. Escribe la **razón** en 1 o 2 frases para el cliente: por qué existe la pieza y cómo se juntaron objetivo, estrategia, concepto(s) y evidencia para llegar a ese tópico (ej. "Tostado Co. paga anuncios de su suscripción; respondemos haciendo la cuenta visible y recordando que cada bolsa sale tostada esa semana"). Sin jerga ni nombres internos.
    - Muestra el plan completo en el chat:
-     `| Fecha | Día | Formato | Pilar | Objetivo | Concepto | Tópico | I/C | Evidencia |`
-     y debajo: total por objetivo (con el principal), por formato y por pilar, y cuántas piezas son `[I]` y cuántas `[C]`.
+     `| Fecha | Día | Formato | Pilar | Objetivo | Estrategia | Concepto(s) | Tópico | I/C | Evidencia | Razón |`
+     (si combina dos conceptos, el principal va primero) y debajo: total por objetivo (con el principal), por estrategia, por formato y por pilar, y cuántas piezas son `[I]`, `[C]` y cuántas combinan conceptos.
    - Termina con: *"¿Lo escribo en Partners así, o ajustamos algo?"* y **no escribas nada** hasta un sí explícito. Itera las veces que haga falta.
 
 4. **FASE 4: ESCRIBIR EN PARTNERS (solo tras el sí):**
@@ -92,14 +93,18 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
        -d '[
          { "client_id": "<client_id>", "fecha": "YYYY-MM-DD", "formato": "Imagen", "pilar": "Problema",
            "topico_angulo": "...", "marcador": "I", "evidencia": "dato (fuente, fecha)",
-           "concepto_id": "<id del concepto en strategy_nodes>", "concepto": "<nombre del concepto>", "objetivo": "<título del objetivo>",
+           "concepto_id": "<id del concepto principal>", "concepto_ids": ["<id del concepto principal>", "<id del segundo, si combina>"],
+           "concepto": "<nombre del concepto principal>", "objetivo": "<título del objetivo del concepto principal>",
+           "razon": "<por qué existe y cómo se combinó la estrategia, 1-2 frases>",
            "estado_copy": "Pendiente", "estado_render": "Pendiente", "estado_publicado": "Pendiente" },
          { ... }
        ]'
      ```
      - `estado_render = 'Producción externa'` en las filas `Reel`; `Pendiente` en las demás.
      - `formato` solo `Imagen`, `Carrusel`, `Estado` o `Reel`; `pilar` solo `Problema`, `Identidad` o `Prueba`; `marcador` solo `I` o `C`.
+     - `concepto_ids` siempre lleva al menos el concepto principal y en primer lugar (igual a `concepto_id`). Partners lee de ahí el objetivo, la estrategia y los conceptos de cada pieza para sus gráficos y su detalle.
      - `concepto` y `objetivo` son una copia de los nombres de hoy, para que Partners los siga mostrando aunque la Estrategia cambie después.
+     - `descripcion_visual` (qué muestra la imagen) no se escribe aquí: la escribe `/03_generar` cuando define la imagen.
    - **Modo Corrección o Ya existe:** cambia solo lo acordado. `PATCH` por `id` para editar una pieza, `DELETE` por `id` para quitarla (solo si sigue en `estado_copy = 'Pendiente'`) y `POST` para las nuevas. Nunca borres el mes entero para reescribirlo.
    - **Devuelve el plan a revisión del cliente:**
      ```bash
@@ -112,7 +117,7 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
 
 5. **FASE 5: CIERRE EN EL CHAT:**
    - Resume: total de piezas (fotos + reels), cuántas van al objetivo principal, reparto por formato y por pilar, y cuántas son `[I]` y `[C]`.
-   - Recuerda que el cliente ya lo ve en **Partners → Contenido → Planificación** (calendario, objetivo y concepto de cada pieza) y que debe **aprobarlo** ahí. `/03_generar` avisa si el plan del mes no está aprobado.
+   - Recuerda que el cliente ya lo ve en **Partners → Contenido → Planificación** (gráficos del mes por objetivo, estrategia, concepto, formato y pilar; calendario; y al abrir cada pieza, de dónde sale en la estrategia y la razón) y que debe **aprobarlo** ahí. `/03_generar` avisa si el plan del mes no está aprobado.
    - Si corriste en modo corrección, lista qué piezas cambiaron.
 
 ---

@@ -106,6 +106,7 @@ description: generar_contenido
      3. **CTA final** (última escena, llamada a la acción explícita).
      - Usa los parámetros de la Fase 2 (Escenario, Sujeto, Paleta Lumínica, Plano) como dirección de arte de los beats, no como una sola escena estática — un Reel puede cruzar más de un encuadre dentro de los mismos parámetros aprobados.
      - Este guion es el entregable de esta fase para el Reel — no se genera ningún render de video aquí; `/04_ensamblar` coordina la producción externa a partir de este guion.
+   - **Siempre (todos los formatos):** escribe `descripcion_visual` en **español claro para el cliente**, 1 o 2 frases: qué se verá en la imagen o el video y por qué se ve así, conectado con la razón de la pieza (`razon`, escrita por `/05_planificacion`). Ej.: "La tostadora abierta soltando grano recién tostado; va al centro porque es la prueba del tueste propio". Sin términos técnicos ni el prompt en inglés. Partners la muestra al abrir la pieza, en "Qué muestra la imagen".
 
    **Paso C: Escritura en Supabase**
    - `PATCH` sobre el `id` de esa fila con lo redactado en los Pasos A y B, los 4 parámetros visuales aprobados en la Fase 2 y `estado_copy = Listo`:
@@ -114,7 +115,7 @@ description: generar_contenido
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
        -H "Content-Type: application/json" -H "Prefer: return=minimal" \
        -d '{ "copy_instagram": "...", "copy_pinterest": "...", "copy_x": "...", "copy_linkedin": "...", "copy_gbp": "...",
-             "prompt_visual": "...", "escenario": "...", "sujeto": "...", "paleta_luminica": "...", "plano": "...",
+             "prompt_visual": "...", "descripcion_visual": "...", "escenario": "...", "sujeto": "...", "paleta_luminica": "...", "plano": "...",
              "texto_laminas": [ ... solo en Carrusel ... ], "estado_copy": "Listo" }'
      ```
    - En filas `Reel`, deja en `null` las plataformas que no aplican en vez de rellenarlas con contenido genérico.
