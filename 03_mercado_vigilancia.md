@@ -19,8 +19,13 @@ description: mercado_vigilancia
 - **Tavily** (`tavily_search`, `tavily_research`) — validación macro: tendencias, estudios, datos de industria/gobierno.
   > **Fallback obligatorio si Tavily no está conectado o falla ("Connection closed"):** no bloquees todo el proceso por esto — usa `WebFetch` + `Firecrawl` sobre las mismas fuentes/medios que usarías con Tavily. Este fallback ya fue validado en producción (sesión WTB, sep. 2026) y produce resultados equivalentes, solo más manual. El hallazgo se sigue clasificando `Tipo de Señal = Macro` sin importar qué herramienta lo obtuvo.
 - **Firecrawl** (`firecrawl_search`) — disección de los sitios web de los competidores: página de precios/servicios, propuesta de valor, CTAs, temas de blog.
-- **Apify (vía API REST, no MCP)** — espionaje social y publicitario de competidores + comportamiento de audiencia general. El token vive en `D:\ANTES_15_09_2026\0.-Publicidad_nivel_01\.agents\workflows\.env` (`APIFY_API_TOKEN=...`) — **este archivo nunca debe subirse a un repositorio ni compartirse**; si este proyecto se convierte en repo git en el futuro, agrégalo a `.gitignore` de inmediato. Cada llamada debe leer el valor de ese archivo (las variables de entorno no persisten entre llamadas de shell independientes). Actors confirmados y accesibles con este token:
-  - `apify/instagram-scraper` y `clockworks/tiktok-scraper` — perfiles de competidores Y hashtags de nicho (cuenta sin actors propios, se usan los públicos del store).
+- **Metricool (conector de Claude)** — **fuente principal para Instagram y Facebook de la competencia**, estandarizada y sin créditos extra. Cada cliente es una **marca** en Metricool; su `brandId` está en la línea `metricool_brand_id:` de `[Cliente]/Inputs/docs/7.-plan_contratado.md` (si falta, búscalo con `getBrandSettings` y pide agregarlo al archivo). Los competidores se agregan **a mano** en Metricool (marca del cliente → Competidores, en Instagram y Facebook); el conector solo los lee. Datos con `getAnalyticsDataByMetrics(brandId, from, to, metrics)`:
+  - Perfil por competidor: Instagram `IGCO02` (usuario), `IGCO07` (seguidores), `IGCO08` (posts), `IGCO12` (reels), `IGCO09` (likes prom.), `IGCO06` (comentarios), `IGCO10` (engagement por 1000 seguidores) · Facebook `FBCO02`, `FBCO06`, `FBCO07`, `FBCO08` (reacciones prom.), `FBCO05`, `FBCO09`, `FBCO10`.
+  - Cada post del competidor: Instagram `IGCP01` (competidor), `IGCP04` (texto), `IGCP06` (fecha y hora), `IGCP07` (likes), `IGCP08` (comentarios), `IGCP09` (interacciones), `IGCP10` (engagement), `IGCP11` (url) · reels `IGCR01`, `IGCR03`, `IGCR06`, `IGCR09`, `IGCR04` · Facebook `FBCP01`, `FBCP04`, `FBCP06`, `FBCP07`, `FBCP08`, `FBCP09`.
+  - Si un ID cambió, `getAnalyticsAvailableMetrics(network, connector="competitors" | "competitor posts" | "competitor reels")` da la lista vigente.
+  - **No cubre** TikTok, Google Maps ni la biblioteca de anuncios de Meta: para eso sigue Apify.
+- **Apify (vía API REST, no MCP)** — lo que Metricool no cubre: anuncios pagados (Meta Ad Library), TikTok, hashtags de nicho, y el respaldo de Instagram para un competidor que aún no está en Metricool. El token vive en `D:\ANTES_15_09_2026\0.-Publicidad_nivel_01\.agents\workflows\.env` (`APIFY_API_TOKEN=...`) — **este archivo nunca debe subirse a un repositorio ni compartirse**; si este proyecto se convierte en repo git en el futuro, agrégalo a `.gitignore` de inmediato. Cada llamada debe leer el valor de ese archivo (las variables de entorno no persisten entre llamadas de shell independientes). Actors confirmados y accesibles con este token:
+  - `clockworks/tiktok-scraper` — perfiles de TikTok de competidores; `apify/instagram-scraper` — hashtags de nicho y respaldo de perfiles que no estén en Metricool.
   - `apify/facebook-ads-scraper` — Meta Ad Library: qué anuncios está pagando cada competidor **ahora mismo** en Facebook/Instagram. Esta es la señal más fuerte: un rival no paga por un ángulo que no le funciona.
 - **Bash (`curl`) contra la API REST de Supabase** — destino de los hallazgos estructurados (tabla `market_findings`), con nivel de confianza y tipo de señal, y fuente de la identidad/buyer del cliente (tablas `brand_identities` y `client_interviews`) y del estudio de génesis (`market_studies`). Mismo patrón que Apify: token leído del `.env` en cada llamada.
 
@@ -76,10 +81,14 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
    - Para cada competidor de la Fase 0, usa `firecrawl_search` (o scrape directo de su dominio) para extraer: propuesta de valor textual, servicios/planes ofrecidos, CTAs usados, y temas recientes de su blog si tiene.
    - Registra explícitamente qué **no** ofrece o no menciona cada competidor — ahí vive el gap.
 
-   **C. Apify — espionaje social y publicitario (vía API REST):**
-   Para cada competidor de la Fase 0, ejecuta (con Bash, leyendo el token del `.env` en el momento de la llamada) las tres sub-tareas:
+   **C. Redes de la competencia — Metricool primero, Apify para el resto:**
 
-   - **C1. Perfil orgánico** (qué publica, cadencia, engagement real):
+   - **C0. Instagram y Facebook orgánico (Metricool):** para la marca del cliente, trae el perfil de cada competidor y sus posts y reels **desde la última corrida** (o los últimos 30 días): IDs en Herramientas. Busca: sus publicaciones con más interacciones del periodo (¿qué ángulo, formato y día?), cambios de cadencia, promociones nuevas en los textos y temas que se repiten. Cada hallazgo cita `(Metricool, Instagram @cuenta, fecha del post)` y su `link` es la url del post. Si un competidor de la Fase 0 no está en Metricool, avisa para agregarlo y usa C1 de respaldo.
+     - **Promedios del mes** (`competitor_benchmarks`): al final de C0 calcula, por competidor y red, `seguidores`, `posts`, `reels`, `engagement` e `interacciones_prom` del mes en curso (misma fórmula que `/01_mercado_estudio`, Fase 5) y escríbelos en la Fase 5 junto con los hallazgos, tras el mismo sí. Publicaciones de Partners compara cada pieza del cliente contra ese promedio.
+
+   Con Bash, leyendo el token del `.env` en el momento de la llamada:
+
+   - **C1. Perfil orgánico de respaldo (Apify)** — solo para TikTok, o para un competidor de Instagram que no esté en Metricool:
      ```bash
      TOKEN=$(grep APIFY_API_TOKEN "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
      curl -s -X POST "https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=$TOKEN" \
@@ -101,7 +110,7 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
    - **C3. Hashtags de nicho** (comportamiento de la audiencia general, no solo de los rivales): igual que antes, sobre los hashtags de `6.-fuentes.md`.
 
 4. **FASE 4: CRUCE DE CONFIANZA (obligatorio antes de escribir nada):**
-   - Para cada hallazgo candidato, verifica cuántas de las 3 fuentes (Tavily/WebFetch, Firecrawl, Apify) lo sostienen y asigna:
+   - Para cada hallazgo candidato, verifica cuántas de las 3 fuentes (Tavily/WebFetch, Firecrawl, redes vía Metricool o Apify) lo sostienen y asigna:
      - **Confianza = Alta**: 3 fuentes coinciden (o 2 fuentes + un anuncio pagado activo que lo confirma), **o** el hallazgo ya está en el dossier profundo de `/01_mercado_estudio` (carta, reseña real o post ya verificados en esa fase no necesitan re-cruzarse).
      - **Confianza = Media**: 2 fuentes coinciden.
      - **Confianza = Baja**: 1 sola fuente — regístralo igual, pero como hipótesis a validar, nunca como hecho.

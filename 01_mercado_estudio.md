@@ -20,10 +20,15 @@ description: mercado_estudio
 ---
 
 **Herramientas requeridas (conectores de Claude / APIs):**
-- **Apify (vía API REST, token en `.env`)** — actors validados:
+- **Metricool (conector de Claude)** — **fuente principal para Instagram y Facebook de la competencia**, estandarizada y sin créditos extra. Cada cliente es una **marca** en Metricool; su `brandId` está en la línea `metricool_brand_id:` de `[Cliente]/Inputs/docs/7.-plan_contratado.md` (si falta, búscalo con `getBrandSettings` y pide agregarlo al archivo). Los competidores se agregan **a mano** en Metricool (marca del cliente → Competidores, en Instagram y Facebook); el conector solo los lee. Datos con `getAnalyticsDataByMetrics(brandId, from, to, metrics)`:
+  - Perfil por competidor: Instagram `IGCO02` (usuario), `IGCO07` (seguidores), `IGCO08` (posts), `IGCO12` (reels), `IGCO09` (likes prom.), `IGCO06` (comentarios), `IGCO10` (engagement por 1000 seguidores) · Facebook `FBCO02`, `FBCO06`, `FBCO07`, `FBCO08` (reacciones prom.), `FBCO05`, `FBCO09`, `FBCO10`.
+  - Cada post del competidor: Instagram `IGCP01` (competidor), `IGCP04` (texto), `IGCP06` (fecha y hora), `IGCP07` (likes), `IGCP08` (comentarios), `IGCP09` (interacciones), `IGCP10` (engagement), `IGCP11` (url) · reels `IGCR01`, `IGCR03`, `IGCR06`, `IGCR09`, `IGCR04` · Facebook `FBCP01`, `FBCP04`, `FBCP06`, `FBCP07`, `FBCP08`, `FBCP09`.
+  - Si un ID cambió, `getAnalyticsAvailableMetrics(network, connector="competitors" | "competitor posts" | "competitor reels")` da la lista vigente.
+  - **No cubre** TikTok, Google Maps ni la biblioteca de anuncios de Meta: para eso sigue Apify.
+- **Apify (vía API REST, token en `.env`)** — para lo que Metricool no cubre. Actors validados:
   - `compass/crawler-google-places` — censo de competidores en Google Maps (nombre, dirección, teléfono, web, rating, reseñas, coordenadas).
   - `compass/Google-Maps-Reviews-Scraper` — texto real de reseñas (no solo estrellas) por negocio.
-  - `apify/instagram-scraper` — hasta 50 publicaciones recientes por cuenta (fotos, captions, comentarios, engagement).
+  - `apify/instagram-scraper` — **solo de respaldo**: para un competidor de Instagram que aún no está en Metricool o si el conector falla. Hasta 50 publicaciones recientes por cuenta.
   - `clockworks/tiktok-scraper` — análogo para TikTok si el rubro lo amerita.
 - **WebFetch / Bash (`curl`)** — extracción de cartas desde Rappi vía el blob `__NEXT_DATA__` (Next.js SSR): `curl -A "<user-agent real de Chrome>" <url-rappi>` y parsear `fallback[key].corridors[].products[]`. Más confiable que fetch genérico. PedidosYa normalmente bloquea esto (Cloudflare 403) — ver Fase 3.
 - **Firecrawl** — sitios propios de competidores que no están en un agregador de delivery.
@@ -59,12 +64,14 @@ Si algún actor de Apify no está en el plan del token, no adivines un actor alt
 2. **FASE 2: SELECCIÓN DEL TOP N PARA DOSSIER PROFUNDO:**
    - Ordena el universo relevante por número de reseñas (proxy de relevancia/tracción real) y selecciona el top 10 (ajustable según el tamaño del mercado — pilotea con 2-3 antes de escalar a los 10, para no quemar créditos de Apify si algo del schema falla).
    - Confirma con el usuario el alcance (10 es el default validado) antes de escalar.
+   - **Alta en Metricool:** con el top N confirmado, lista sus cuentas de Instagram y Facebook y pide al usuario que las agregue como competidores en la marca del cliente en Metricool. Espera su confirmación antes de la Fase 3 (sin eso, el conector no devuelve sus datos). Si el cliente aún no tiene marca en Metricool, sigue con Apify de respaldo y anótalo como limitación.
 
 3. **FASE 3: CAPTURA PROFUNDA POR COMPETIDOR (el corazón del proceso):**
    Para cada uno de los N seleccionados, captura:
    - **Carta completa con precios:** primero Rappi (técnica `__NEXT_DATA__` de la sección de herramientas); si el negocio no está ahí, prueba PedidosYa o su web propia.
      - **Cuando todo falla (403, sin presencia digital):** ofrece al usuario suministrar manualmente una foto de carta física, un PDF, o capturas de pantalla — **esto es una fuente 100% confiable, no un parche**. Se usó así para 3 de 10 competidores en el caso de origen (Don Tito, Cocoliche, Mr. Luca's) y cerró el dataset sin comprometer calidad. Documenta la fuente exacta en formato APA (`fuente_apa`) sea cual sea el origen.
-   - **Instagram:** hasta 50 publicaciones recientes vía `apify/instagram-scraper` → de ahí extrae engagement promedio (likes/comentarios), y **detecta promociones** escaneando captions por palabras clave (`promo`, `descuento`, `2x1`, `combo`, `%`, etc.).
+   - **Instagram y Facebook (Metricool):** perfil del competidor y sus posts y reels de los **últimos 90 días** (IDs en Herramientas). De ahí sale el engagement promedio, la cadencia (posts y reels por mes), sus publicaciones con más interacciones y las **promociones**, escaneando los textos por palabras clave (`promo`, `descuento`, `2x1`, `combo`, `%`, etc.). Cita cada dato como `(Metricool, Instagram @cuenta, fecha)`. Solo si un competidor no está en Metricool, usa `apify/instagram-scraper`.
+   - **TikTok:** `clockworks/tiktok-scraper` si el rubro lo amerita (Metricool no da competencia en TikTok).
    - **Reseñas reales de Google:** vía `compass/Google-Maps-Reviews-Scraper`, guarda el **texto completo**, no solo las estrellas — el texto es lo que luego revela patrones (quejas de atención, elogios de sabor, alertas de higiene).
    - Si una fuente no está disponible tras intentarlo, regístralo como limitación honesta explícita (`carta_nota_metodologica`) — nunca inventes o extrapoles un dato que no se pudo verificar.
 
@@ -74,6 +81,14 @@ Si algún actor de Apify no está en el plan del token, no adivines un actor alt
    - **Cruce:** el rango bottom-up debería representar una fracción coherente del rango top-down (ej. 1-5% si es una sub-categoría dentro de un sector más amplio). Esa coincidencia es lo que da credibilidad — preséntalo siempre como rango con metodología visible, nunca como una cifra puntual sin sustento.
 
 5. **FASE 5: CONSOLIDACIÓN — EL JSON MAESTRO:**
+   - **Promedios de la competencia para Partners** (`competitor_benchmarks`, uno por competidor, red y mes): con los datos de Metricool del mes en curso escribe `seguidores`, `posts`, `reels`, `engagement` e `interacciones_prom` (= interacciones promedio por publicación del mes: suma de `IGCP09`/`IGCR09` del competidor ÷ número de publicaciones; en Facebook, reacciones + comentarios + compartidos ÷ publicaciones). Publicaciones de Partners lo usa para comparar cada pieza del cliente:
+     ```bash
+     curl -s -X POST "$SUPABASE_URL/rest/v1/competitor_benchmarks?on_conflict=client_id,mes,red,competidor" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
+       -H "Content-Type: application/json" -H "Prefer: resolution=merge-duplicates" \
+       -d '[{ "client_id": "<client_id>", "mes": "YYYY-MM", "red": "instagram", "competidor": "<usuario sin @>", "seguidores": 0, "posts": 0, "reels": 0, "interacciones_prom": 0, "engagement": 0 }]'
+     ```
+     Escríbelo junto con la fila de `market_studies`, tras el mismo visto bueno.
    - Todo lo anterior converge en una sola estructura, fuente de verdad del cliente (fila en `market_studies` de Supabase; el JSON local `[Cliente]/Inputs/estudio_mercado_maestro.json` sigue existiendo como copia de trabajo), con esta estructura mínima:
      ```
      cliente, ciudad, fecha_estudio, version, fecha_actualizacion,
