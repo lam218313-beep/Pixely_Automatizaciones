@@ -12,7 +12,7 @@ description: generar_contenido
 > SUPABASE_URL=$(grep SUPABASE_URL "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
 > SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
 > ```
-> **En Partners:** mientras `estado_copy` no sea `Listo`, la pieza aparece en **Planificación** como "Copy pendiente"; al quedar `Listo` pasa a "En diseño". El cliente aún no puede aprobarla: eso ocurre cuando `/04_ensamblar` cargue las piezas finales.
+> **En Partners:** el cliente aprueba cada idea en **Planificación** antes de que exista copy; en cuanto escribes el copy la idea queda "en producción" y ya no puede cambiarse ahí. La pieza terminada (imagen y textos) la aprueba en **Validación**, cuando `/04_ensamblar` cargue las piezas finales.
 
 ---
 
@@ -28,17 +28,12 @@ description: generar_contenido
 
    **Paso A — Lectura de la cola de trabajo (dos colas):**
    - Resuelve el `client_id` igual que en `/05_planificacion` (consulta a `clients`).
-   - **¿El cliente aprobó el plan del mes?** Antes de redactar la Cola 1, revisa `plan_reviews`:
+   - **Cola 1, copy nuevo:** solo las ideas que el cliente **aprobó** en Planificación (`plan_estado = Aprobada`) y que aún no tienen copy (`estado_copy = Pendiente`). Fila = registro con su `id`:
      ```bash
-     curl -s "$SUPABASE_URL/rest/v1/plan_reviews?client_id=eq.<client_id>&mes=eq.YYYY-MM&select=estado,comentario" \
+     curl -s "$SUPABASE_URL/rest/v1/content_pieces?client_id=eq.<client_id>&fecha=gte.YYYY-MM-01&fecha=lt.<primer día del mes siguiente>&estado_copy=eq.Pendiente&plan_estado=eq.Aprobada&order=fecha.asc&select=*" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
-     Si `estado` no es `Aprobado` (o no hay fila), avisa antes de escribir copy nuevo: si es `Cambios solicitados`, muestra el `comentario` y sugiere correr primero `/05_planificacion`. Sigue solo si el usuario lo confirma. La Cola 2 (correcciones de piezas ya aprobadas) no depende de esto.
-   - **Cola 1, copy nuevo:** las filas del mes con `estado_copy = Pendiente` (fila = registro con su `id`):
-     ```bash
-     curl -s "$SUPABASE_URL/rest/v1/content_pieces?client_id=eq.<client_id>&fecha=gte.YYYY-MM-01&fecha=lt.<primer día del mes siguiente>&estado_copy=eq.Pendiente&order=fecha.asc&select=*" \
-       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
-     ```
+     Di en el chat cuántas ideas del mes **no** entran porque el cliente aún no las aprueba (`Pendiente`) o pidió cambios (`Cambios solicitados`; esas se corrigen primero con `/05_planificacion`). Nunca escribas copy de una idea no aprobada. La Cola 2 (correcciones de piezas finales) no depende de esto.
    - **Cola 2, correcciones del cliente:** filas con `estado_aprobacion = Cambios solicitados` (de cualquier mes) — el cliente las devolvió desde Validación en Partners con un comentario:
      ```bash
      curl -s "$SUPABASE_URL/rest/v1/content_pieces?client_id=eq.<client_id>&estado_aprobacion=eq.Cambios%20solicitados&order=fecha.asc&select=id,fecha,formato,topico_angulo,comentario_cliente,copy_instagram,copy_linkedin,copy_pinterest,copy_gbp,copy_x,prompt_visual,texto_laminas" \

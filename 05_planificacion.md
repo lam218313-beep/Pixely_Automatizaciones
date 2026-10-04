@@ -32,17 +32,15 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
 
 0. **FASE 0: RESOLVER CLIENTE, MES Y MODO (antes de leer nada más):**
    - Resuelve el `client_id` en `clients` (misma consulta que `/01_mercado_estudio`). Si no hay match o hay más de uno, pregunta; nunca lo asumas.
-   - Mira si el mes ya tiene plan y si el cliente lo revisó:
+   - Mira si el mes ya tiene plan y qué decidió el cliente sobre cada idea (el cliente aprueba **pieza por pieza** en Planificación):
      ```bash
-     curl -s "$SUPABASE_URL/rest/v1/content_pieces?client_id=eq.<client_id>&fecha=gte.<mes>-01&fecha=lt.<primer día del mes siguiente>&select=id,fecha,formato,pilar,topico_angulo,concepto,objetivo,estado_copy,estado_render,url_piezas_finales&order=fecha" \
-       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
-     curl -s "$SUPABASE_URL/rest/v1/plan_reviews?client_id=eq.<client_id>&mes=eq.<mes>&select=estado,comentario" \
+     curl -s "$SUPABASE_URL/rest/v1/content_pieces?client_id=eq.<client_id>&fecha=gte.<mes>-01&fecha=lt.<primer día del mes siguiente>&select=id,fecha,formato,pilar,topico_angulo,concepto,objetivo,razon,plan_estado,plan_comentario,estado_copy,estado_render,url_piezas_finales&order=fecha" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
    - Decide el modo y dilo en el chat:
      - **Nuevo:** el mes no tiene piezas.
-     - **Corrección:** `plan_reviews.estado = 'Cambios solicitados'`. Muestra el `comentario` textual y cambia **solo** las piezas que el comentario pide; el resto del plan se queda igual.
-     - **Ya existe:** hay piezas y no se pidieron cambios. **Nunca dupliques:** pregunta si quiere agregar piezas sueltas o rehacer el plan.
+     - **Corrección:** hay piezas con `plan_estado = 'Cambios solicitados'`. Lista cada una con su `plan_comentario` textual y propón el ajuste **solo de esas piezas** (otro tópico, ángulo, fecha, formato o concepto, según lo que pidió); las demás se quedan igual. Las `Aprobada` no se tocan.
+     - **Ya existe:** hay piezas y ninguna tiene cambios pedidos (pueden estar `Pendiente` o `Aprobada`). **Nunca dupliques:** pregunta si quiere agregar piezas sueltas o rehacer el plan.
    - **Regla de producción:** solo se pueden cambiar o borrar piezas que todavía no empezaron (`estado_copy = 'Pendiente'`). Si una pieza ya tiene copy o diseño, avísalo y pide confirmación expresa antes de tocarla.
 
 1. **FASE 1: LEER LA ESTRATEGIA Y LA EVIDENCIA (OBLIGATORIO):**
@@ -106,18 +104,12 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
      - `concepto` y `objetivo` son una copia de los nombres de hoy, para que Partners los siga mostrando aunque la Estrategia cambie después.
      - `descripcion_visual` (qué muestra la imagen) no se escribe aquí: la escribe `/03_generar` cuando define la imagen.
    - **Modo Corrección o Ya existe:** cambia solo lo acordado. `PATCH` por `id` para editar una pieza, `DELETE` por `id` para quitarla (solo si sigue en `estado_copy = 'Pendiente'`) y `POST` para las nuevas. Nunca borres el mes entero para reescribirlo.
-   - **Devuelve el plan a revisión del cliente:**
-     ```bash
-     curl -s -X POST "$SUPABASE_URL/rest/v1/plan_reviews?on_conflict=client_id,mes" \
-       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
-       -H "Content-Type: application/json" -H "Prefer: resolution=merge-duplicates" \
-       -d '{ "client_id": "<client_id>", "mes": "<mes>", "estado": "Pendiente", "comentario": null, "revisada_at": null, "revisada_por": null, "actualizada_at": "<ahora en ISO 8601>" }'
-     ```
+   - **Devuelve a revisión del cliente solo lo que cambiaste:** cada pieza corregida (y cada pieza nueva) queda en `plan_estado = 'Pendiente'`. En el mismo `PATCH` de la corrección incluye `"plan_estado": "Pendiente"` y deja `plan_comentario` como está, para que el cliente vea a qué respondiste. Las piezas nuevas nacen en `Pendiente` solas (valor por defecto). Nunca escribas `Aprobada`: eso solo lo hace el cliente desde Partners.
    - Verifica con un `GET` que el mes tiene exactamente las piezas del plan, sin duplicados.
 
 5. **FASE 5: CIERRE EN EL CHAT:**
    - Resume: total de piezas (fotos + reels), cuántas van al objetivo principal, reparto por formato y por pilar, y cuántas son `[I]` y `[C]`.
-   - Recuerda que el cliente ya lo ve en **Partners → Contenido → Planificación** (gráficos del mes por objetivo, estrategia, concepto, formato y pilar; calendario; y al abrir cada pieza, de dónde sale en la estrategia y la razón) y que debe **aprobarlo** ahí. `/03_generar` avisa si el plan del mes no está aprobado.
+   - Recuerda que el cliente ya lo ve en **Partners → Contenido → Planificación** (gráficos del mes por objetivo, estrategia, concepto, formato y pilar; calendario; y al abrir cada idea, de dónde sale en la estrategia y la razón, sin imágenes ni copy) y que debe **aprobar cada idea** ahí (o todas las pendientes de una vez). `/03_generar` solo produce las ideas aprobadas.
    - Si corriste en modo corrección, lista qué piezas cambiaron.
 
 ---
