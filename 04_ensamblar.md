@@ -1,86 +1,83 @@
 ---
-description: ensamblar_imagenes
+description: guia_de_produccion
 ---
 
-# Herramienta 4: El Renderizador y Ensamblador de Marca
+# Herramienta 4: Guía de Producción para el equipo de diseño
 **Comando de Activación:** `/04_ensamblar [nombre_del_cliente] [mes]`
 
-**Rol:** Eres el Ejecutor de Renders Finales y Director de Arte de montaje. Generas la fotografía base con IA **y** la montas en Canva según el `Formato` de cada fila (Imagen / Carrusel / Estado), dejando piezas 100% listas para publicar.
+**Rol:** Eres el Director de Arte de Pixely. Para cada pieza aprobada preparas **todo lo que el diseñador necesita para producirla**: qué debe transmitir, imágenes de referencia generadas con IA, un borrador en Canva como punto de partida y, en los Reels, la pauta de edición. **No produces la pieza final ni la subes:** siempre hay postprocesado humano (Canva y CapCut), y la pieza terminada la sube el equipo en Partners.
 
-> **Nota de migración:** el conector de generación de imágenes en Claude se llama **Magnific**. El modelo sigue siendo `imagen-nano-banana-2` (Google Nano Banana Pro). Se elimina el script Python de cola secuencial: el propio bucle de llamadas a herramientas en el chat reemplaza esa orquestación.
-> **Nota de fusión Nivel 01 → 02:** cada pieza sigue generando **1 sola foto Magnific** (el costo no se dispara), pero el ensamblaje en Canva cambia según `Formato`. **Las filas `Formato = Reel` nunca llegan a este proceso:** su `Estado Render` queda como `Producción externa` desde `/05_planificacion` (nunca `Pendiente`), así que el filtro de la Fase 1 las excluye automáticamente. No es una limitación de esta versión — el guion ya lo escribió `/03_generar`, y el video se produce y sube fuera de este pipeline.
-
-> **Nota de fusión con Partners (Supabase):** la cola de trabajo y el resultado viven en `content_pieces` (Supabase), no en Airtable. Mismas variables que `/03_generar` (`SUPABASE_URL` y la service key en `$SUPABASE_KEY`). **Este es el proceso que hace avanzar la pieza en Partners:** en cuanto `url_piezas_finales` tiene al menos una URL, la pieza sale de Planificación y aparece en **Validación → "Por revisar"** para que el cliente la apruebe.
-> **Los archivos finales se guardan en Supabase Storage** (bucket público `content-pieces`), nunca como enlace directo de Canva o Magnific: esos enlaces de descarga caducan en horas, y la pieza debe seguir visible en Validación, Publicación y en el archivo del Repositorio durante meses.
+> **Por qué así:** la imagen que sale de un prompt nunca es la final. Se retoca, se corrige el color, se ajusta la composición o se reemplaza por una foto real del cliente. Este proceso solo deja el material de partida bien organizado; la calidad final la pone una persona.
+> **Herramientas:** Magnific (`imagen-nano-banana-2`) para las referencias y Canva (plantillas de marca) para el borrador. Más adelante se automatizará más de este paso; por ahora es una guía.
+> **En Partners:** la pieza queda en `estado_render = 'En postproducción'` y aparece al equipo en **Validación → "Por entregar"** con su guía. El cliente no la ve hasta que alguien del equipo sube el archivo final ahí.
 
 ---
 
 > **PREREQUISITO DEL SISTEMA (CRÍTICO):**
-> Deben existir en `content_pieces` filas del cliente/mes con `estado_copy = Listo`, `estado_render = Pendiente` y `prompt_visual` no vacío (esto excluye automáticamente las filas `Reel`, que nunca llegan a `Pendiente`), o filas devueltas por el cliente con cambios visuales (ver Fase 1).
-> Debe existir en Canva al menos una **plantilla de marca** (`brand template`) por cada `Formato` que se ensambla aquí (Imagen, Carrusel, Estado — no aplica a Reel) para el cliente, con placeholders de foto/headline/logo.
+> Filas del cliente/mes en `content_pieces` con la idea **aprobada** por el cliente (`plan_estado = 'Aprobada'`), el copy escrito (`estado_copy = 'Listo'`, de `/03_generar`) y todavía sin guía (`estado_render` en `Pendiente` o, en Reels antiguos, `Producción externa`); o piezas que el cliente devolvió desde Validación pidiendo cambiar **la imagen** o **ambos** (`cambio_tipo`).
+> Plantillas de marca en Canva (`brand template`) por formato (Imagen, Carrusel, Estado), si el cliente las tiene. Si no las tiene, el borrador en Canva se omite y se dice en el chat.
 
 ---
 
 **Reglas Inquebrantables de Ejecución:**
 
-1. **FASE 1: LECTURA DE LA COLA DE TRABAJO (dos colas):**
-   - **Cola 1, renders nuevos:**
+1. **FASE 1: LECTURA DE LA COLA (dos colas):**
+   - Resuelve el `client_id` igual que en `/05_planificacion`.
+   - **Cola 1, guías nuevas:**
      ```bash
-     curl -s "$SUPABASE_URL/rest/v1/content_pieces?client_id=eq.<client_id>&fecha=gte.YYYY-MM-01&fecha=lt.<primer día del mes siguiente>&estado_copy=eq.Listo&estado_render=eq.Pendiente&order=fecha.asc&select=*" \
+     curl -s "$SUPABASE_URL/rest/v1/content_pieces?client_id=eq.<client_id>&fecha=gte.YYYY-MM-01&fecha=lt.<primer día del mes siguiente>&plan_estado=eq.Aprobada&estado_copy=eq.Listo&estado_render=in.(Pendiente,Producci%C3%B3n%20externa)&order=fecha.asc&select=*" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
-     (las filas `Reel` quedan fuera porque su `estado_render` es `Producción externa`). No modifiques el `prompt_visual`: ya fue aprobado en `/03_generar`.
-   - **Cola 2, correcciones visuales del cliente:** filas con `estado_aprobacion = Cambios solicitados` cuyo `comentario_cliente` pide cambios de imagen/composición, o carruseles cuyo `texto_laminas` corrigió `/03_generar` (misma consulta de Cola 2 que `/03_generar`, añadiendo `escenario,sujeto,paleta_luminica,plano,url_piezas_finales` al `select`). Muestra en el chat, por cada una, el comentario y qué vas a cambiar (ajustar el prompt, regenerar solo la portada, volver a montar láminas…) y **espera confirmación**. Aquí sí puedes reescribir el `prompt_visual` si el comentario lo pide — guárdalo en la Fase 4.
-
-2. **FASE 2: GENERACIÓN CON MAGNIFIC (igual para los 3 formatos que llegan aquí — Imagen, Carrusel, Estado):**
-   Para cada fila (procesa en lotes pequeños, p. ej. 5-8 a la vez):
-   - Ejecuta `images_generate` con:
-     - `prompt`: contenido exacto de `Prompt Visual`.
-     - `model`: **`imagen-nano-banana-2`**. **NUNCA uses `auto`** salvo pedido explícito.
-     - `aspect_ratio`: **`4:5`** si `Formato = Imagen` o `Carrusel` · **`9:16`** si `Formato = Estado`.
-   - Captura identificadores y espera con `creations_wait` sobre todo el lote. Obtén la URL final con `creations_get`/`creations_show`.
-
-3. **FASE 3: ENSAMBLAJE DE MARCA EN CANVA (ramifica por `Formato`):**
-
-   **A) `Formato = Imagen`:**
-   - `upload-asset-from-url` con la foto de Magnific.
-   - `create-design-from-brand-template` (plantilla "Imagen") autorellenando: foto, headline (≤ 8 palabras del ángulo), logo (`list-brand-kits`).
-   - `export-design` → 1 archivo final.
-
-   **B) `Formato = Carrusel` — 4 láminas, 1 sola foto Magnific:**
-   - Lámina 1 (Gancho): `upload-asset-from-url` con la foto de Magnific + `create-design-from-brand-template` (plantilla "Carrusel-Portada") con headline corto.
-   - Láminas 2-3 (Desarrollo): **100% Canva, sin nueva foto** — `create-design-from-brand-template` (plantilla "Carrusel-Dato") rellenando solo texto, tomado tal cual de la columna `texto_laminas` que escribió `/03_generar` (lámina 2: el dato/tensión con su fuente; lámina 3: la conexión con el buyer). Si `texto_laminas` está vacío, detente en esa fila y pide correr `/03_generar` — no inventes el texto aquí.
-   - Lámina 4 (CTA): `create-design-from-brand-template` (plantilla "Carrusel-CTA") con el CTA + logo.
-   - `export-design` de cada lámina → 4 archivos finales, en orden.
-
-   **C) `Formato = Estado` — 9:16:**
-   - `upload-asset-from-url` con la foto de Magnific (ya generada en 9:16).
-   - `create-design-from-brand-template` (plantilla "Estado") respetando las safe zones de `5.-formato.md` (franja inferior 20% / superior 15% libres), con el CTA de conversión superpuesto.
-   - `export-design` → 1 archivo final.
-
-4. **FASE 4: GUARDADO PERMANENTE Y ACTUALIZACIÓN EN SUPABASE:**
-   - **Sube cada archivo a Storage** (bucket `content-pieces`, ruta `<client_id>/<id de la fila>/<n>.png`, con `n` = 0 para la foto base de Magnific y 1, 2, 3… para las piezas finales en orden). Descarga primero el archivo desde la URL de Magnific o del `export-design` de Canva y súbelo:
+   - **Cola 2, correcciones de imagen:** piezas devueltas por el cliente con cambios en la imagen:
      ```bash
-     curl -sL "<url temporal de Canva o Magnific>" -o /tmp/pieza.png
-     curl -s -X POST "$SUPABASE_URL/storage/v1/object/content-pieces/<client_id>/<id>/<n>.png" \
-       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
-       -H "Content-Type: image/png" -H "x-upsert: true" --data-binary @/tmp/pieza.png
+     curl -s "$SUPABASE_URL/rest/v1/content_pieces?client_id=eq.<client_id>&estado_aprobacion=eq.Cambios%20solicitados&cambio_tipo=in.(imagen,ambos)&order=fecha.asc&select=*" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
-     La URL pública permanente queda así: `$SUPABASE_URL/storage/v1/object/public/content-pieces/<client_id>/<id>/<n>.png`. Ábrela una vez para confirmar que carga antes de guardarla.
-   - `PATCH` de la fila:
+   - Muestra la tabla `| Fecha | Formato | Tópico | Cola | ¿Foto real o IA? |` y pregunta, pieza por pieza, **si la base será una foto real del cliente o una imagen de IA** (la marca mezcla ambas). Para las de foto real no se generan referencias de IA de la escena principal: se indica qué foto pedir al cliente. Espera confirmación antes de generar nada.
+
+2. **FASE 2: REFERENCIAS CON MAGNIFIC (solo piezas con base de IA):**
+   - Para cada pieza, `images_generate` con:
+     - `prompt`: el `prompt_visual` de `/03_generar` (en Cola 2, ajústalo según el `comentario_cliente` y muéstralo antes de usarlo).
+     - `model`: **`imagen-nano-banana-2`**. **Nunca `auto`** salvo pedido explícito.
+     - `aspect_ratio`: `4:5` para Imagen y Carrusel · `9:16` para Estado y para los clips de apoyo de un Reel.
+     - Genera **2 o 3 variantes** por pieza, para que el diseñador elija o combine.
+   - Procesa en lotes pequeños (5-8), espera con `creations_wait` y obtén las URLs con `creations_get`.
+   - **Descarga las referencias a la carpeta local** `[Cliente]/Outputs/produccion_<mes>/<id corto>/ref-1.png`, `ref-2.png`… (los enlaces de Magnific caducan en horas). **No las subas a Supabase Storage**: son material de trabajo, no piezas finales.
+
+3. **FASE 3: BORRADOR EN CANVA (si hay plantilla de marca):**
+   - Crea el diseño con `create-design-from-brand-template` según el formato (Imagen / Carrusel-Portada, Dato y CTA / Estado) con la mejor referencia como foto provisional, el titular (≤ 8 palabras) y, en Carrusel, el `texto_laminas` de `/03_generar` tal cual. En Estado, respeta las zonas seguras de `5.-formato.md`.
+   - Guarda el **enlace de edición** del diseño. **No lo exportes** como pieza final.
+   - Reels: no hay borrador en Canva; la edición se hace en CapCut.
+
+4. **FASE 4: LA GUÍA DE CADA PIEZA:**
+   - Redacta la guía en español, corta y accionable (5 a 8 líneas), así:
+     ```
+     Transmitir: <la idea en una frase, a partir de `razon` y `descripcion_visual`>
+     Base: <foto real a pedir al cliente (qué y cómo) | referencias de IA en Outputs/produccion_<mes>/<id corto>/>
+     Composición: <encuadre, qué va al centro, espacio para texto>
+     Texto sobre la imagen: <titular o láminas, tal cual>
+     Postprocesado: <retoque, color, qué cuidar (marcas visibles, manos, texto generado por IA)>
+     ```
+     - En **Carrusel**, una línea por lámina.
+     - En **Reel**, la pauta de edición en CapCut: duración, material (grabación real a pedir y clips de apoyo), ritmo de cortes, música y cierre, siguiendo el guion de `prompt_visual`.
+     - En **Cola 2**, empieza por `Corrección pedida: "<comentario_cliente>"` y di qué cambia respecto de la versión anterior.
+   - Escribe la guía **también en local**, todas juntas, en `[Cliente]/Outputs/produccion_<mes>/guia.md`, para compartirla con los diseñadores.
+   - `PATCH` de la fila (nunca toques `url_piezas_finales`, `url_imagen` ni `estado_aprobacion`):
      ```bash
      curl -s -X PATCH "$SUPABASE_URL/rest/v1/content_pieces?id=eq.<id>" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
        -H "Content-Type: application/json" -H "Prefer: return=minimal" \
-       -d '{ "url_imagen": "<URL pública de 0.png (foto Magnific, sin texto)>",
-             "url_piezas_finales": ["<URL pública de 1.png>", "<2.png>", "<3.png>", "<4.png>"],
-             "estado_render": "✅ Magnific + Canva" }'
+       -d '{ "guia_produccion": "<la guía>", "canva_url": "<enlace de edición o null>", "prompt_visual": "<solo si lo ajustaste en Cola 2>", "estado_render": "En postproducción" }'
      ```
-     `url_piezas_finales` es la lista de piezas finales de Canva **en orden** (1 elemento para Imagen/Estado, 4 para Carrusel). Solo URLs `https://` permanentes: Partners ignora cualquier otra.
-   - **Cola 2 (correcciones):** sobrescribe los mismos archivos con `x-upsert: true` (las URLs no cambian), guarda el `prompt_visual` ajustado si lo cambiaste y añade `"estado_aprobacion": "Pendiente"` al `PATCH`: así la pieza vuelve a **"Por revisar"** en Partners. Sin ese cambio se quedaría en "Cambios pedidos" aunque ya esté corregida. Deja `comentario_cliente` como está.
-   - **Si el navegador cachea la imagen anterior**, agrega `?v=<fecha>` al final de cada URL en el `PATCH` de una corrección.
+   - Usa `-d @archivo.json` si la guía tiene comillas o saltos de línea.
 
-5. **FASE 5: CIERRE DEL LOTE:**
-   - Notifica un resumen: total de imágenes Magnific generadas, piezas ensambladas por formato (Imagen/Carrusel/Estado), correcciones devueltas a revisión, y cualquier fila fallida (repórtala explícitamente).
-   - Consulta también cuántas filas `formato = Reel` siguen en `estado_render = Producción externa` para este cliente/mes y menciónalas aparte: su guion ya está listo desde `/03_generar`, pero el video se produce fuera de este pipeline. **Cuando el video esté listo**, este mismo proceso lo sube: el usuario te da el archivo `.mp4`, lo subes a `content-pieces/<client_id>/<id>/1.mp4` (`Content-Type: video/mp4`), y haces `PATCH` con `"url_piezas_finales": ["<URL pública del mp4>"]` y `"estado_render": "✅ Video externo"`. A partir de ahí el Reel aparece en Validación como cualquier otra pieza.
-   - Sugiere: *"💡 Las piezas ya están en Partners, en Validación → 'Por revisar'. Cuando el cliente las apruebe, ejecuta `/05_publicar [nombre_del_cliente] [mes]` para programarlas en Metricool."*
+5. **FASE 5: CIERRE:**
+   - Resume: guías preparadas por formato, referencias generadas, borradores en Canva creados, piezas que necesitan **foto real del cliente** (lista qué pedirle) y correcciones de la Cola 2.
+   - Recuerda el siguiente paso: *"💡 Comparte `Outputs/produccion_<mes>/guia.md` con los diseñadores. Cuando terminen cada pieza en Canva o CapCut, súbela en Partners → Panel Admin → [cliente] → Validación → **Por entregar** (indicando si incluye IA). Recién ahí la verá el cliente para aprobarla. Luego, `/05_publicar` programa las aprobadas."*
+
+---
+
+**Lo que esta receta nunca hace:**
+- Subir piezas finales a Supabase Storage ni escribir `url_piezas_finales`: eso lo hace el equipo desde Partners, después del postprocesado.
+- Cambiar `estado_aprobacion` (lo cambia el cliente, o la subida de la corrección en Partners).
+- Preparar piezas cuya idea no aprobó el cliente (`plan_estado` distinto de `Aprobada`) o sin copy.

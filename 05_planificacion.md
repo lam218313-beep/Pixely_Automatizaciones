@@ -13,7 +13,7 @@ description: planificacion
 > - **Imagen:** una sola idea o dato; foto 4:5.
 > - **Carrusel:** pasos, comparación o antes/después; 4 láminas (1 foto Magnific de gancho + 2 láminas 100% Canva de dato o tensión + 1 lámina de CTA). Consume **1 solo cupo** del plan.
 > - **Estado:** historia vertical, efímera.
-> - **Reel:** consume un cupo de `reels_mes`; esta receta planifica la fecha y el ángulo, pero **el video se produce fuera del pipeline** (`estado_render = 'Producción externa'`).
+> - **Reel:** consume un cupo de `reels_mes`; esta receta planifica la fecha y el ángulo, pero **el video se produce fuera del pipeline** (su guía la prepara `/04_ensamblar` y el equipo lo edita en CapCut).
 
 > **Prerrequisitos:**
 > - El cliente existe en `clients` y tiene **Estrategia** en Partners (`/04_estrategia`), idealmente aprobada.
@@ -98,7 +98,7 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
          { ... }
        ]'
      ```
-     - `estado_render = 'Producción externa'` en las filas `Reel`; `Pendiente` en las demás.
+     - `estado_render = 'Pendiente'` en todas las filas (también los Reels: `/04_ensamblar` prepara su guía).
      - `formato` solo `Imagen`, `Carrusel`, `Estado` o `Reel`; `pilar` solo `Problema`, `Identidad` o `Prueba`; `marcador` solo `I` o `C`.
      - `concepto_ids` siempre lleva al menos el concepto principal y en primer lugar (igual a `concepto_id`). Partners lee de ahí el objetivo, la estrategia y los conceptos de cada pieza para sus gráficos y su detalle.
      - `concepto` y `objetivo` son una copia de los nombres de hoy, para que Partners los siga mostrando aunque la Estrategia cambie después.

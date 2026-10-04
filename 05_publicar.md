@@ -39,10 +39,10 @@ description: publicar_final
    Usa siempre `createScheduledPost` con `autoPublish: true`. **Nunca uses `createScheduledPostForReview` ni `sendScheduledPostForReview`:** la revisión ya la hizo el cliente en Partners, y pasarla por el flujo de revisión de Metricool le haría aprobar dos veces. Una llamada por pieza (todas sus redes en `providers`) o una por red, como resulte más claro. `media` = las URLs de `url_piezas_finales` en orden.
    - **Instagram** (`instagram`, texto de `copy_instagram`):
      - `Imagen` → `instagramData.type = POST`, 1 imagen.
-     - `Carrusel` → `POST` con las 4 láminas en `media`, en orden.
+     - `Carrusel` → `POST` con todas las láminas de `url_piezas_finales` en `media`, en orden.
      - `Estado` → `STORY` (sin texto si Instagram es la única red de esa llamada).
      - `Reel` → `REEL`, el `.mp4` en `media`. Es la única red de un Reel.
-     - Marca `isAiGenerated: true` cuando la foto base salió de Magnific (todo menos Reel con video real).
+     - Marca `isAiGenerated` con el valor de `generada_con_ia` de la fila (lo indica el equipo al subir la pieza final en Partners). Si viene vacío, pregunta antes de programar.
    - **LinkedIn** (`linkedin`, texto de `copy_linkedin`, primera imagen de `url_piezas_finales`): Imagen y Carrusel. Si `copy_linkedin` está vacío, no va a LinkedIn.
    - **Pinterest** (`pinterest`, texto de `copy_pinterest`, `pinTitle` = su título SEO, primera imagen): Imagen y Carrusel. Pregunta al usuario el nombre exacto del tablero si no lo tienes.
    - **Google Business** (`gmb`, `gmbData.type = publication`, texto de `copy_gbp`, máx. 1500 caracteres): Imagen y Carrusel.

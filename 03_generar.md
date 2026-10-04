@@ -34,12 +34,13 @@ description: generar_contenido
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
      Di en el chat cuántas ideas del mes **no** entran porque el cliente aún no las aprueba (`Pendiente`) o pidió cambios (`Cambios solicitados`; esas se corrigen primero con `/05_planificacion`). Nunca escribas copy de una idea no aprobada. La Cola 2 (correcciones de piezas finales) no depende de esto.
-   - **Cola 2, correcciones del cliente:** filas con `estado_aprobacion = Cambios solicitados` (de cualquier mes) — el cliente las devolvió desde Validación en Partners con un comentario:
+   - **Cola 2, correcciones de texto del cliente:** filas que el cliente devolvió desde Validación diciendo que quiere cambiar **el texto** o **ambos** (`cambio_tipo`, lo elige el cliente en Partners). Las de solo `imagen` no son de este proceso: las atiende el diseñador.
      ```bash
-     curl -s "$SUPABASE_URL/rest/v1/content_pieces?client_id=eq.<client_id>&estado_aprobacion=eq.Cambios%20solicitados&order=fecha.asc&select=id,fecha,formato,topico_angulo,comentario_cliente,copy_instagram,copy_linkedin,copy_pinterest,copy_gbp,copy_x,prompt_visual,texto_laminas" \
+     curl -s "$SUPABASE_URL/rest/v1/content_pieces?client_id=eq.<client_id>&estado_aprobacion=eq.Cambios%20solicitados&cambio_tipo=in.(texto,ambos)&order=fecha.asc&select=id,fecha,formato,topico_angulo,comentario_cliente,cambio_tipo,copy_instagram,copy_linkedin,copy_pinterest,copy_gbp,copy_x,prompt_visual,texto_laminas" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
-     Lee cada `comentario_cliente` y clasifícalo: **pide cambios de texto** (copy, titular, tono, datos) → lo corriges tú en la Fase 3b · **pide cambios visuales** (foto, composición, colores) → no es de este proceso, déjalo para `/04_ensamblar` · **ambos** → corrige aquí el texto y avisa que falta la parte visual. Muestra esa clasificación en el chat antes de tocar nada.
+     Muestra en el chat cada `comentario_cliente` con su `cambio_tipo` antes de tocar nada. Si una fila antigua no tiene `cambio_tipo`, clasifícala tú leyendo el comentario y dilo.
+   - **Redes de la marca:** lee la línea `redes:` de `[Cliente]/Inputs/docs/7.-plan_contratado.md` (ej. `redes: instagram, linkedin, gbp`; valores posibles: `instagram`, `linkedin`, `pinterest`, `gbp`, `x`). **Solo escribes copy para esas redes**; las demás columnas `copy_*` quedan en `null`, así Partners no muestra redes que la marca no usa y `/05_publicar` no las programa. Si la línea no existe, pregunta al usuario qué redes usa la marca y sugiérele agregarla al archivo.
    - **Nunca toques filas ya aprobadas** (`estado_aprobacion = Aprobado`): el cliente ya dio su visto bueno a ese texto.
 
    **Paso B — Carga de Evidencia (Supabase):**
@@ -84,8 +85,8 @@ description: generar_contenido
    **Paso A: Redacción Multicanal con Evidencia**
    - Mezcla el tópico con la evidencia del banco de datos. Un dato real (Web o Social) vale 3x más que una afirmación genérica.
    - **Ramifica según `Formato` de la fila (ver **Formatos** en `/05_planificacion`: el Formato lo decide el plan según el concepto y el ángulo):**
-     - `Imagen` y `Estado`: un solo copy corto y directo, como antes. Redacta las 4 plataformas (Pinterest, X, LinkedIn, GBP) + Instagram.
-     - `Carrusel`: `copy_instagram` lleva SOLO el caption breve (2-3 líneas que inviten a deslizar, según `5.-formato.md`) — la información pesada va en el texto de las láminas, que se guarda en la columna `texto_laminas` para que `/04_ensamblar` lo use en las plantillas Canva: `[{"lamina": 2, "titulo": "...", "texto": "el dato/tensión con su fuente"}, {"lamina": 3, "titulo": "...", "texto": "la conexión con el buyer"}]`. Redacta también las 4 plataformas.
+     - `Imagen` y `Estado`: un solo copy corto y directo, como antes. Redacta Instagram y las demás redes **de la línea `redes:`** (Pinterest, X, LinkedIn, GBP solo si la marca las usa).
+     - `Carrusel`: `copy_instagram` lleva SOLO el caption breve (2-3 líneas que inviten a deslizar, según `5.-formato.md`) — la información pesada va en el texto de las láminas, que se guarda en la columna `texto_laminas` para que `/04_ensamblar` lo use en las plantillas Canva: `[{"lamina": 2, "titulo": "...", "texto": "el dato/tensión con su fuente"}, {"lamina": 3, "titulo": "...", "texto": "la conexión con el buyer"}]`. Redacta también las demás redes de la marca (línea `redes:`).
      - `Reel`: es contenido nativo de Instagram/TikTok — redacta **solo** `Copy Instagram` (caption corta: gancho textual + CTA) y deja Pinterest/X/LinkedIn/GBP vacíos en esa fila. El guion completo del video va aparte, en el Paso B.
    - Reglas por plataforma (aplican solo cuando esa plataforma corresponde a la fila, según arriba):
      - **Pinterest:** título SEO-friendly (palabras clave negocio Perú/Lima), descripción 2-3 oraciones, CTA a la web, 5-7 hashtags de nicho.
@@ -123,9 +124,10 @@ description: generar_contenido
    **FASE 3b: CORRECCIONES DE TEXTO DEL CLIENTE (Cola 2, solo las clasificadas como texto):**
    - Por cada una: muestra en el chat el comentario del cliente, el texto actual y tu propuesta corregida, y **espera confirmación** antes de escribir.
    - Tras confirmar, `PATCH` solo de las columnas de texto que cambian (copy, `texto_laminas`).
-   - Si la corrección era **solo de texto**, la pieza vuelve a revisión del cliente: incluye en el mismo `PATCH` `"estado_aprobacion": "Pendiente"`. Deja `comentario_cliente` como está (el cliente lo verá como contexto al revisar de nuevo).
-   - Si además pide cambios visuales, **no** cambies `estado_aprobacion`: lo hará `/04_ensamblar` cuando re-renderice. Para un **Carrusel** cuyo texto de láminas cambió, avisa que `/04_ensamblar` debe volver a montar las láminas aunque el comentario no hable de la foto.
+   - **`cambio_tipo = texto` y solo cambió el copy de las redes:** la pieza vuelve a revisión del cliente: incluye en el mismo `PATCH` `"estado_aprobacion": "Pendiente"`. Deja `comentario_cliente` como está (el cliente lo verá como contexto al revisar de nuevo).
+   - **`cambio_tipo = ambos`:** no cambies `estado_aprobacion`. La pieza sigue en "Por entregar" para el equipo; vuelve a revisión cuando suban la imagen corregida en Partners.
+   - **El texto que va *sobre* la imagen cambió** (titular, `texto_laminas` de un Carrusel): eso lo tiene que rehacer el diseñador. No vuelvas la pieza a `Pendiente`; en el mismo `PATCH` pon `"cambio_tipo": "ambos"` para que aparezca en "Por entregar" y avisa que `/04_ensamblar` debe actualizar su guía.
 
 4. **FASE 4: CIERRE DEL LOTE:**
-   - Muestra un resumen: total de piezas, % de copy respaldado por investigación real (Web + Social) vs ángulo creativo, y correcciones aplicadas (cuántas volvieron a revisión, cuántas esperan a `/04_ensamblar`).
-   - Sugiere: *"💡 Las filas quedaron con `estado_copy = Listo` en Supabase (en Partners se ven en Planificación como 'En diseño'). Cuando estés conforme, ejecuta `/04_ensamblar [nombre_del_cliente] [mes]` para generar los renders y las piezas finales de marca (las filas `Reel` se coordinan aparte para producción externa del video, a partir del guion ya escrito)."*
+   - Muestra un resumen: total de piezas, % de copy respaldado por investigación real (Web + Social) vs ángulo creativo, y correcciones aplicadas (cuántas volvieron a revisión, cuántas esperan al diseñador).
+   - Sugiere: *"💡 Las filas quedaron con `estado_copy = Listo`. Ejecuta `/04_ensamblar [nombre_del_cliente] [mes]` para preparar la guía de producción de cada pieza (referencias, borrador en Canva, guion de los Reels) para los diseñadores."*
