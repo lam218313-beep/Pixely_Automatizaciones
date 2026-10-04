@@ -18,7 +18,7 @@ description: planificacion
 > **Prerrequisitos:**
 > - El cliente existe en `clients` y tiene **Estrategia** en Partners (`/04_estrategia`), idealmente aprobada.
 > - Hay hallazgos de vigilancia del mes (`/03_mercado_vigilancia`) y, si existe, el estudio (`/01_mercado_estudio`).
-> - Existe `[Cliente]/Inputs/docs/7.-plan_contratado.md` con `fotos_mes` y `reels_mes`. Partners ya no guarda planes, así que este archivo local es la **única** fuente del volumen. Si falta, detente y pide que lo creen.
+> - La marca tiene su **Configuración** en Partners (`brand_settings`: `fotos_mes`, `reels_mes`, `redes`), que el equipo edita en Panel del equipo → marca → Configuración. Es la fuente del volumen. Si falta, usa de respaldo `[Cliente]/Inputs/docs/7.-plan_contratado.md`; si tampoco está, detente y pide completar la Configuración.
 
 Mismas variables `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` del `.env` que usan las demás recetas:
 ```bash
@@ -56,7 +56,12 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
      - Si `strategy_reviews.estado` no es `Aprobada`, avisa (si es `Cambios solicitados`, muestra el comentario) y sigue solo si el usuario lo confirma.
    - **Evidencia del mes:** `market_findings` del cliente (ordenados de `Alta` a `Baja` y por fecha) y `market_studies` (promociones típicas, insumos poco explotados, reseñas). Es el banco de munición para las piezas `[I]`.
    - **Voz de marca** (`brand_identities`: `tone_traits`, `palabras_si`, `palabras_no`, `archetype`, `voz_estado`): los tópicos se redactan con esa voz y nunca usan `palabras_no`. Si la voz no está aprobada, avísalo.
-   - **Volumen:** `fotos_mes` y `reels_mes` de `7.-plan_contratado.md`. Total de piezas = `fotos_mes + reels_mes`.
+   - **Volumen:** `fotos_mes` y `reels_mes` de la Configuración de la marca:
+     ```bash
+     curl -s "$SUPABASE_URL/rest/v1/brand_settings?client_id=eq.<client_id>&select=plan,fotos_mes,reels_mes,redes,metricool_brand_id,ciudad,rubro" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+     ```
+     Total de piezas = `fotos_mes + reels_mes`. Los formatos deben poder salir en las `redes` de la marca (ej. sin Instagram ni TikTok no hay Reels ni Estados).
 
 2. **FASE 2: REPARTIR EL MES ENTRE LOS CONCEPTOS (antes de escribir ningún tópico):**
    - **Peso de cada concepto** según su frecuencia: `high` = 3, `medium` = 2, `low` = 1. Reparte el total de piezas en proporción a esos pesos, con estas reglas:

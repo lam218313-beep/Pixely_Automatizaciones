@@ -50,7 +50,12 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
    - **Estudio de mercado** (`market_studies`, de `/01_mercado_estudio`): `tamano_mercado.rango_estimado`, `universo_competidores.listado` (rating y reseñas), `dossier_profundo[].estadisticas_precio`, `panorama_producto_precio.promociones_tipicas_detectadas`, y las `notas_metodologicas.limitaciones_honestas`.
    - **Vigilancia** (`market_findings`, de `/03_mercado_vigilancia`): ordénalos por `confianza` (Alta → Media → Baja) y luego por `fecha` (más recientes primero).
    - **Voz de marca** (`brand_identities`: `archetype`, `tone_traits`, `palabras_si`, `palabras_no`, `voz_estado`): los ganchos y textos de esta receta se escriben con esa voz y nunca usan `palabras_no`. Si no hay voz, o `voz_estado` no es `Aprobada`, avisa: lo ideal es correr antes `/02_voz_de_marca` y que el cliente la apruebe. Sigue solo si el usuario lo confirma.
-   - **Volumen contratado:** `[Cliente]/Inputs/docs/7.-plan_contratado.md` (`fotos_mes`, `reels_mes`), la misma fuente que usa `/05_planificacion`.
+   - **Volumen contratado:** `fotos_mes` y `reels_mes` de la **configuración de la marca en Partners** (`brand_settings`, la edita el equipo en Panel del equipo → marca → Configuración), la misma fuente que usa `/05_planificacion`:
+     ```bash
+     curl -s "$SUPABASE_URL/rest/v1/brand_settings?client_id=eq.<client_id>&select=plan,fotos_mes,reels_mes,redes,metricool_brand_id,ciudad,rubro" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+     ```
+     Si la fila no existe o le falta el volumen, usa de respaldo `[Cliente]/Inputs/docs/7.-plan_contratado.md` y pide completar la Configuración en Partners.
    - Si no hay estudio de mercado **ni** hallazgos, avísalo: una estrategia sin mercado es una hipótesis. Sigue solo si el usuario lo confirma, y dilo en el porqué de cada objetivo.
 
 2. **FASE 2: DIAGNÓSTICO EN EL CHAT (antes de proponer nada):**

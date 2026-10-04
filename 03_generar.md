@@ -17,7 +17,7 @@ description: generar_contenido
 ---
 
 > **PREREQUISITO DEL SISTEMA (CRÍTICO):**
-> Deben existir en `content_pieces` las filas del mes de este cliente, creadas por `/05_planificacion` (la cantidad depende del plan contratado — Lite/Basic/Pro, ver `7.-plan_contratado.md`).
+> Deben existir en `content_pieces` las filas del mes de este cliente, creadas por `/05_planificacion` (la cantidad depende del plan contratado — Lite/Basic/Pro, en la Configuración de la marca en Partners).
 > **Ejemplo:** `/03_generar Pixely Octubre`
 
 ---
@@ -40,7 +40,12 @@ description: generar_contenido
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
      Muestra en el chat cada `comentario_cliente` con su `cambio_tipo` antes de tocar nada. Si una fila antigua no tiene `cambio_tipo`, clasifícala tú leyendo el comentario y dilo.
-   - **Redes de la marca:** lee la línea `redes:` de `[Cliente]/Inputs/docs/7.-plan_contratado.md` (ej. `redes: instagram, linkedin, gbp`; valores posibles: `instagram`, `linkedin`, `pinterest`, `gbp`, `x`). **Solo escribes copy para esas redes**; las demás columnas `copy_*` quedan en `null`, así Partners no muestra redes que la marca no usa y `/05_publicar` no las programa. Si la línea no existe, pregunta al usuario qué redes usa la marca y sugiérele agregarla al archivo.
+   - **Redes de la marca:** el campo `redes` de la Configuración de la marca en Partners:
+     ```bash
+     curl -s "$SUPABASE_URL/rest/v1/brand_settings?client_id=eq.<client_id>&select=plan,fotos_mes,reels_mes,redes,metricool_brand_id,ciudad,rubro" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+     ```
+     Valores posibles: `instagram`, `facebook`, `linkedin`, `tiktok`, `pinterest`, `gbp`, `x`. **Solo escribes copy para esas redes**; las demás columnas `copy_*` quedan en `null`, así Partners no muestra redes que la marca no usa y `/05_publicar` no las programa. **Facebook y TikTok usan el mismo texto de `copy_instagram`** (no tienen columna propia): si la marca solo usa una de ellas, igual escribe `copy_instagram`. Si `redes` está vacío, usa de respaldo la línea `redes:` de `7.-plan_contratado.md` y pide completar la Configuración en Partners.
    - **Nunca toques filas ya aprobadas** (`estado_aprobacion = Aprobado`): el cliente ya dio su visto bueno a ese texto.
 
    **Paso B — Carga de Evidencia (Supabase):**

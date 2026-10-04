@@ -34,7 +34,12 @@ description: publicar_final
    - Muestra la tabla `| Fecha | Formato | Tópico | Redes | Hora propuesta |` y **espera confirmación** antes de programar nada.
 
 2. **FASE 2: CONEXIÓN A METRICOOL Y HORA DE PUBLICACIÓN:**
-   - `blogId`/`brandId`: la línea `metricool_brand_id:` de `[Cliente]/Inputs/docs/7.-plan_contratado.md` (cada cliente es una marca en Metricool). Si falta, búscala con `getBrandSettings`, confírmala con el usuario y sugiérele agregarla al archivo. Toma de `getBrandSettings` la zona horaria de esa marca.
+   - `blogId`/`brandId` y redes: `metricool_brand_id` y `redes` de la Configuración de la marca en Partners (cada cliente es una marca en Metricool):
+     ```bash
+     curl -s "$SUPABASE_URL/rest/v1/brand_settings?client_id=eq.<client_id>&select=plan,fotos_mes,reels_mes,redes,metricool_brand_id,ciudad,rubro" \
+       -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+     ```
+     Si falta el id, búscalo con `getBrandSettings`, confírmalo con el usuario y pídele guardarlo en Partners (Panel del equipo → marca → Configuración). Toma de `getBrandSettings` la zona horaria de esa marca. Programa **solo** en las `redes` de la Configuración.
    - Hora: usa `getBestTimeToPostByNetwork` (Instagram/LinkedIn) para la semana de cada pieza y toma la mejor franja de ese día; si no hay datos, usa 13:00 hora del cliente. Una sola hora por pieza para todas sus redes, salvo que el usuario pida otra cosa.
 
 3. **FASE 3: PROGRAMACIÓN MULTIPLATAFORMA (`createScheduledPost`, programación directa):**
@@ -48,8 +53,10 @@ description: publicar_final
    - **LinkedIn** (`linkedin`, texto de `copy_linkedin`, primera imagen de `url_piezas_finales`): Imagen y Carrusel. Si `copy_linkedin` está vacío, no va a LinkedIn.
    - **Pinterest** (`pinterest`, texto de `copy_pinterest`, `pinTitle` = su título SEO, primera imagen): Imagen y Carrusel. Pregunta al usuario el nombre exacto del tablero si no lo tienes.
    - **Google Business** (`gmb`, `gmbData.type = publication`, texto de `copy_gbp`, máx. 1500 caracteres): Imagen y Carrusel.
+   - **Facebook** (`facebook`, texto de `copy_instagram`, mismas imágenes): Imagen, Carrusel y Reel (`facebookData.type` `POST` o `REEL`); `Estado` → `STORY`. Solo si la marca tiene `facebook` en sus redes.
+   - **TikTok** (`tiktok`, texto de `copy_instagram`): solo Reels, y solo si la marca tiene `tiktok` en sus redes.
    - **X:** se publica manualmente (restricciones de la API gratuita). No lo programes por Metricool: deja el `copy_x` listo en el chat para copiar y pegar.
-   - `Estado` solo va a Instagram (historia); `Reel` solo a Instagram.
+   - `Estado` va a las historias de Instagram (y Facebook si la marca lo usa); `Reel` a Instagram, y a Facebook y TikTok si la marca los usa.
 
 4. **FASE 4: ACTUALIZACIÓN EN SUPABASE (solo de las piezas que Metricool aceptó):**
    ```bash
