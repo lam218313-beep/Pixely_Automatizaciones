@@ -34,7 +34,7 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
    - Resuelve el `client_id` en `clients` (misma consulta que `/01_mercado_estudio`). Si no hay match o hay más de uno, pregunta; nunca lo asumas.
    - Mira si el mes ya tiene plan y qué decidió el cliente sobre cada idea (el cliente aprueba **pieza por pieza** en Planificación):
      ```bash
-     curl -s "$SUPABASE_URL/rest/v1/content_pieces?client_id=eq.<client_id>&fecha=gte.<mes>-01&fecha=lt.<primer día del mes siguiente>&select=id,fecha,formato,pilar,topico_angulo,concepto,objetivo,razon,plan_estado,plan_comentario,estado_copy,estado_render,url_piezas_finales&order=fecha" \
+     curl -s "$SUPABASE_URL/rest/v1/content_pieces?client_id=eq.<client_id>&fecha=gte.<mes>-01&fecha=lt.<primer día del mes siguiente>&select=id,fecha,formato,pilar,topico_angulo,concepto,objetivo,razon,descripcion_visual,estructura,plan_estado,plan_comentario,estado_copy,estado_render,url_piezas_finales&order=fecha" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
    - Decide el modo y dilo en el chat:
@@ -81,9 +81,11 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
      5. Redacta el **tópico** en una línea, con la Voz de marca.
      6. Si es `[I]`, anota la **evidencia** en una línea: el dato y su fuente (ej. "3 competidores venden suscripción mensual (Google Maps, 1 oct)").
      7. Escribe la **razón** en 1 o 2 frases para el cliente: por qué existe la pieza y cómo se juntaron objetivo, estrategia, concepto(s) y evidencia para llegar a ese tópico (ej. "Tostado Co. paga anuncios de su suscripción; respondemos haciendo la cuenta visible y recordando que cada bolsa sale tostada esa semana"). Sin jerga ni nombres internos.
+     8. Escribe **qué contaremos** (`descripcion_visual`) en 1 o 2 frases para el cliente: qué se verá y qué se contará en la pieza, en palabras, sin prompts ni términos técnicos (ej. "Un carrusel en orden de viaje: la finca en Cajamarca, el productor con el grano en la mano, el saco llegando al local, la tostadora y la taza final"). Es lo que el cliente lee para imaginar la pieza antes de aprobarla, porque en Planificación no hay imágenes.
+     9. Si es **Carrusel** o **Reel**, arma su **estructura** (`estructura`): el guion en palabras, paso a paso. Carrusel: de 3 a 10 láminas, la 1 es la portada y la última el cierre. Reel: gancho (primeros segundos), 2 o 3 escenas y cierre con la llamada a la acción. Cada paso lleva un `titulo` de 1 a 3 palabras y un `detalle` de una frase. En Imagen y Estado no se escribe (`null`).
    - Muestra el plan completo en el chat:
-     `| Fecha | Día | Formato | Pilar | Objetivo | Estrategia | Concepto(s) | Tópico | I/C | Evidencia | Razón |`
-     (si combina dos conceptos, el principal va primero) y debajo: total por objetivo (con el principal), por estrategia, por formato y por pilar, y cuántas piezas son `[I]`, `[C]` y cuántas combinan conceptos.
+     `| Fecha | Día | Formato | Pilar | Objetivo | Estrategia | Concepto(s) | Tópico | I/C | Evidencia | Razón | Qué contaremos |`
+     (si combina dos conceptos, el principal va primero). Debajo de la tabla, la estructura de cada Carrusel y Reel como lista numerada (`1. Finca: ...`) y debajo: total por objetivo (con el principal), por estrategia, por formato y por pilar, y cuántas piezas son `[I]`, `[C]` y cuántas combinan conceptos.
    - Termina con: *"¿Lo escribo en Partners así, o ajustamos algo?"* y **no escribas nada** hasta un sí explícito. Itera las veces que haga falta.
 
 4. **FASE 4: ESCRIBIR EN PARTNERS (solo tras el sí):**
@@ -99,6 +101,8 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
            "concepto_id": "<id del concepto principal>", "concepto_ids": ["<id del concepto principal>", "<id del segundo, si combina>"],
            "concepto": "<nombre del concepto principal>", "objetivo": "<título del objetivo del concepto principal>",
            "razon": "<por qué existe y cómo se combinó la estrategia, 1-2 frases>",
+           "descripcion_visual": "<qué contaremos, 1-2 frases para el cliente>",
+           "estructura": [{"n": 1, "titulo": "Finca", "detalle": "..."}, {"n": 2, "titulo": "Productor", "detalle": "..."}],
            "estado_copy": "Pendiente", "estado_render": "Pendiente", "estado_publicado": "Pendiente" },
          { ... }
        ]'
@@ -107,20 +111,20 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
      - `formato` solo `Imagen`, `Carrusel`, `Estado` o `Reel`; `pilar` solo `Problema`, `Identidad` o `Prueba`; `marcador` solo `I` o `C`.
      - `concepto_ids` siempre lleva al menos el concepto principal y en primer lugar (igual a `concepto_id`). Partners lee de ahí el objetivo, la estrategia y los conceptos de cada pieza para sus gráficos y su detalle.
      - `concepto` y `objetivo` son una copia de los nombres de hoy, para que Partners los siga mostrando aunque la Estrategia cambie después.
-     - `descripcion_visual` (qué muestra la imagen) no se escribe aquí: la escribe `/03_generar` cuando define la imagen.
+     - `descripcion_visual` (qué contaremos) va en todas las piezas. `estructura` solo en Carrusel y Reel, con `n` desde 1 y en orden; en Imagen y Estado va `null` (o se omite). `/03_generar` respeta las dos: escribe los textos de las láminas y el guion del Reel siguiendo esta estructura.
    - **Modo Corrección o Ya existe:** cambia solo lo acordado. `PATCH` por `id` para editar una pieza, `DELETE` por `id` para quitarla (solo si sigue en `estado_copy = 'Pendiente'`) y `POST` para las nuevas. Nunca borres el mes entero para reescribirlo.
-   - **Devuelve a revisión del cliente solo lo que cambiaste:** cada pieza corregida (y cada pieza nueva) queda en `plan_estado = 'Pendiente'`. En el mismo `PATCH` de la corrección incluye `"plan_estado": "Pendiente"` y deja `plan_comentario` como está, para que el cliente vea a qué respondiste. Las piezas nuevas nacen en `Pendiente` solas (valor por defecto). Nunca escribas `Aprobada`: eso solo lo hace el cliente desde Partners.
+   - **Devuelve a revisión del cliente solo lo que cambiaste:** cada pieza corregida (y cada pieza nueva) queda en `plan_estado = 'Pendiente'`. En el mismo `PATCH` de la corrección incluye `"plan_estado": "Pendiente"` y deja `plan_comentario` como está, para que el cliente vea a qué respondiste. Las piezas nuevas nacen en `Pendiente` solas (valor por defecto). Nunca escribas `Aprobada`: eso solo lo hace el cliente desde Partners. Si el cambio toca lo que se cuenta, actualiza también `descripcion_visual` y `estructura` en ese `PATCH`.
    - Verifica con un `GET` que el mes tiene exactamente las piezas del plan, sin duplicados.
 
 5. **FASE 5: CIERRE EN EL CHAT:**
    - Resume: total de piezas (fotos + reels), cuántas van al objetivo principal, reparto por formato y por pilar, y cuántas son `[I]` y `[C]`.
-   - Recuerda que el cliente ya lo ve en **Partners → Contenido → Planificación** (gráficos del mes por objetivo, estrategia, concepto, formato y pilar; calendario; y al abrir cada idea, de dónde sale en la estrategia y la razón, sin imágenes ni copy) y que debe **aprobar cada idea** ahí (o todas las pendientes de una vez). `/03_generar` solo produce las ideas aprobadas.
+   - Recuerda que el cliente ya lo ve en **Partners → Contenido → Planificación** (gráficos del mes por objetivo, estrategia, concepto, formato y pilar; calendario; y al abrir cada idea, qué contaremos, el guion de láminas o escenas, de dónde sale en la estrategia y la razón, sin imágenes ni copy) y que debe **aprobar cada idea** ahí (o todas las pendientes de una vez). `/03_generar` solo produce las ideas aprobadas.
    - Si corriste en modo corrección, lista qué piezas cambiaron.
 
 ---
 
 **Lo que esta receta nunca hace:**
-- Escribir copy, prompts visuales ni guiones: eso es de `/03_generar`.
+- Escribir copy, prompts visuales ni el guion de producción: eso es de `/03_generar`. Aquí la `estructura` es solo el orden de lo que se cuenta, en palabras, para que el cliente apruebe la idea.
 - Inventar datos: toda evidencia sale de `market_findings` o `market_studies`, con su fuente.
 - Planificar fuera de la Estrategia: cada pieza sirve a un concepto que existe en `strategy_nodes`.
 - Tocar piezas que ya están en producción sin confirmación expresa del usuario.

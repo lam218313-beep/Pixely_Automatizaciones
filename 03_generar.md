@@ -91,7 +91,7 @@ description: generar_contenido
    - Mezcla el tópico con la evidencia del banco de datos. Un dato real (Web o Social) vale 3x más que una afirmación genérica.
    - **Ramifica según `Formato` de la fila (ver **Formatos** en `/05_planificacion`: el Formato lo decide el plan según el concepto y el ángulo):**
      - `Imagen` y `Estado`: un solo copy corto y directo, como antes. Redacta Instagram y las demás redes **de la línea `redes:`** (Pinterest, X, LinkedIn, GBP solo si la marca las usa).
-     - `Carrusel`: `copy_instagram` lleva SOLO el caption breve (2-3 líneas que inviten a deslizar, según `5.-formato.md`) — la información pesada va en el texto de las láminas, que se guarda en la columna `texto_laminas` para que `/04_ensamblar` lo use en las plantillas Canva: `[{"lamina": 2, "titulo": "...", "texto": "el dato/tensión con su fuente"}, {"lamina": 3, "titulo": "...", "texto": "la conexión con el buyer"}]`. Redacta también las demás redes de la marca (línea `redes:`).
+     - `Carrusel`: `copy_instagram` lleva SOLO el caption breve (2-3 líneas que inviten a deslizar, según `5.-formato.md`) — la información pesada va en el texto de las láminas, que se guarda en la columna `texto_laminas` para que `/04_ensamblar` lo use en las plantillas Canva: `[{"lamina": 2, "titulo": "...", "texto": "el dato/tensión con su fuente"}, {"lamina": 3, "titulo": "...", "texto": "la conexión con el buyer"}]`. **Si la pieza trae `estructura`** (el guion en palabras que el cliente aprobó en Planificación, escrito por `/05_planificacion`), escribe una entrada por cada lámina de la estructura desde la 2, en el mismo orden y contando lo que dice cada paso; la lámina 1 es la portada (titular). Si no trae `estructura` (planes antiguos), usa las láminas 2 y 3 como arriba. Redacta también las demás redes de la marca (línea `redes:`).
      - `Reel`: es contenido nativo de Instagram/TikTok — redacta **solo** `Copy Instagram` (caption corta: gancho textual + CTA) y deja Pinterest/X/LinkedIn/GBP vacíos en esa fila. El guion completo del video va aparte, en el Paso B.
    - Reglas por plataforma (aplican solo cuando esa plataforma corresponde a la fila, según arriba):
      - **Pinterest:** título SEO-friendly (palabras clave negocio Perú/Lima), descripción 2-3 oraciones, CTA a la web, 5-7 hashtags de nicho.
@@ -105,9 +105,11 @@ description: generar_contenido
      1. **Gancho** (primeros 2-3 segundos, en pantalla desde el primer frame — la razón por la que alguien no hace scroll).
      2. **2-3 Beats de desarrollo** (cada uno: qué se ve + qué se dice/texto en pantalla, usando el dato/evidencia del tópico asignado — no relleno genérico).
      3. **CTA final** (última escena, llamada a la acción explícita).
+     - **Si la pieza trae `estructura`** (gancho, escenas y cierre aprobados por el cliente en Planificación), el guion sigue esos pasos en ese orden: los desarrollas, no los cambias.
      - Usa los parámetros de la Fase 2 (Escenario, Sujeto, Paleta Lumínica, Plano) como dirección de arte de los beats, no como una sola escena estática — un Reel puede cruzar más de un encuadre dentro de los mismos parámetros aprobados.
      - Este guion es el entregable de esta fase para el Reel — no se genera ningún render de video aquí; `/04_ensamblar` coordina la producción externa a partir de este guion.
-   - **Siempre (todos los formatos):** escribe `descripcion_visual` en **español claro para el cliente**, 1 o 2 frases: qué se verá en la imagen o el video y por qué se ve así, conectado con la razón de la pieza (`razon`, escrita por `/05_planificacion`). Ej.: "La tostadora abierta soltando grano recién tostado; va al centro porque es la prueba del tueste propio". Sin términos técnicos ni el prompt en inglés. Partners la muestra al abrir la pieza, en "Qué muestra la imagen".
+   - **`descripcion_visual` ("qué contaremos"):** desde ahora la escribe `/05_planificacion` y el cliente la aprueba con la idea. Si la pieza ya la trae, **no la reescribas** ni la incluyas en el `PATCH` (solo puedes precisarla si la imagen definida en la Fase 2 la contradice, y dilo en el chat). Si viene vacía (planes antiguos), escríbela tú:
+   - **Si `descripcion_visual` viene vacía (todos los formatos):** escríbela en **español claro para el cliente**, 1 o 2 frases: qué se verá en la imagen o el video y por qué se ve así, conectado con la razón de la pieza (`razon`, escrita por `/05_planificacion`). Ej.: "La tostadora abierta soltando grano recién tostado; va al centro porque es la prueba del tueste propio". Sin términos técnicos ni el prompt en inglés. Partners la muestra al abrir la pieza, en "Qué muestra la imagen".
 
    **Paso C: Escritura en Supabase**
    - `PATCH` sobre el `id` de esa fila con lo redactado en los Pasos A y B, los 4 parámetros visuales aprobados en la Fase 2 y `estado_copy = Listo`:
@@ -116,7 +118,7 @@ description: generar_contenido
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
        -H "Content-Type: application/json" -H "Prefer: return=minimal" \
        -d '{ "copy_instagram": "...", "copy_pinterest": "...", "copy_x": "...", "copy_linkedin": "...", "copy_gbp": "...",
-             "prompt_visual": "...", "descripcion_visual": "...", "escenario": "...", "sujeto": "...", "paleta_luminica": "...", "plano": "...",
+             "prompt_visual": "...", "descripcion_visual": "... solo si venía vacía ...", "escenario": "...", "sujeto": "...", "paleta_luminica": "...", "plano": "...",
              "texto_laminas": [ ... solo en Carrusel ... ], "estado_copy": "Listo" }'
      ```
    - En filas `Reel`, deja en `null` las plataformas que no aplican en vez de rellenarlas con contenido genérico.
