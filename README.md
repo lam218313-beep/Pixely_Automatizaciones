@@ -15,10 +15,6 @@ Procesos de Claude Desktop (slash-commands) que investigan mercado y planifican 
 | `04_ensamblar.md` | **Guía de producción** para los diseñadores: referencias de IA (o qué foto real pedir), borrador en Canva, pauta de edición de Reels y guía de cada corrección de imagen. No produce ni sube la pieza final: hay postprocesado humano (Canva, CapCut) y el equipo la sube en Partners | lee `content_pieces`, escribe `guia_produccion`/`canva_url`/`estado_render`; referencias y `guia.md` en local |
 | `05_publicar.md` | Programa en Metricool solo lo que el cliente aprobó (guarda hora exacta y `metricool_uuid`); en **modo resultados** trae de Metricool cómo le fue a cada pieza | lee y actualiza `content_pieces`, escribe `piece_metrics` |
 
-## Proceso sin terminar (no toca Supabase todavía)
-
-`06_reportar_cliente.md` — sigue apuntando al flujo viejo (local/Airtable). No lo uses asumiendo que está conectado a Partners.
-
 ### Contrato de `strategy_nodes` (04_estrategia → Partners → 05_planificacion)
 
 | Nivel | `type` | `parent_id` | Campos que Partners dibuja |
@@ -93,3 +89,4 @@ Forma rápida de auditar: `grep -rn "clients\.\|market_studies\.\|market_finding
 - **2026-10-04 (16)** — **Metricool** pasa a ser la fuente de Instagram/Facebook de la competencia en `01_mercado_estudio` y `03_mercado_vigilancia` (cada cliente es una marca en Metricool, con sus competidores agregados a mano); Apify queda para Google Maps, TikTok, la biblioteca de anuncios de Meta y de respaldo. Tablas nuevas: `competitor_benchmarks` (promedios mensuales por competidor, de `01`/`03`) y `piece_metrics` (resultados por pieza y red, del nuevo **modo resultados** de `05_publicar`). `05_publicar` guarda `publicada_at` y `metricool_uuid`. En Partners, Publicación y Repositorio se unieron en **Publicaciones** (Próximas + Publicadas con resultados y comparación con la competencia).
 - **2026-10-04 (17)** — La configuración de cada marca vive en Partners: tabla `brand_settings` (plan, fotos y reels al mes, redes, marca de Metricool, ciudad, rubro y contacto), editada en Panel del equipo → Configuración. Todas las recetas la leen de ahí; `7.-plan_contratado.md` pasa a ser respaldo. Se suman Facebook y TikTok como redes (con el texto de `copy_instagram`).
 - **2026-10-05 (18)** — El cliente imagina la idea antes de aprobarla: `05_planificacion` ahora escribe **qué contaremos** (`descripcion_visual`, antes la escribía `03_generar` después de aprobada) y, en Carrusel y Reel, la **estructura** (columna nueva `content_pieces.estructura`: láminas o escenas en palabras). `03_generar` ya no reescribe `descripcion_visual` (solo la llena en planes antiguos) y escribe `texto_laminas` y el guion del Reel siguiendo la estructura aprobada. Partners muestra las dos en el detalle de cada idea de Planificación.
+- **2026-10-06 (19)** — Se eliminó `06_reportar_cliente`: seguía apuntando al flujo viejo (local/Airtable) y nunca se conectó a Partners. El seguimiento de resultados de cada cliente lo cubre Partners → Publicaciones (`piece_metrics` y comparación con `competitor_benchmarks`).
