@@ -9,8 +9,8 @@ description: generar_contenido
 
 > **Nota de fusión con Partners (Supabase):** cada pieza (Imagen, Carrusel, Estado o Reel) es una **fila de `content_pieces`** en Supabase, la misma tabla que crea `/05_planificacion` y que el cliente ve en Partners. El copy, los 4 parámetros visuales, el prompt visual (o el guion, si es Reel) y los textos de láminas del carrusel se escriben como **columnas de esa fila**. Ya no se usa Airtable. Mismas variables del `.env` que `/01_mercado_estudio`: `SUPABASE_URL` y la service key cargada en `$SUPABASE_KEY`:
 > ```bash
-> SUPABASE_URL=$(grep SUPABASE_URL "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
-> SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
+> SUPABASE_URL=$(grep -m1 '^SUPABASE_URL=' .env | cut -d= -f2- | tr -d '\r')
+> SUPABASE_KEY=$(grep -m1 '^SUPABASE_SERVICE_KEY=' .env | cut -d= -f2- | tr -d '\r')
 > ```
 > **En Partners:** el cliente aprueba cada idea en **Planificación** antes de que exista copy; en cuanto escribes el copy la idea queda "en producción" y ya no puede cambiarse ahí. La pieza terminada (imagen y textos) la aprueba en **Validación**, cuando `/04_ensamblar` cargue las piezas finales.
 

@@ -4,6 +4,8 @@ Procesos de Claude Desktop (slash-commands) que investigan mercado y planifican 
 
 ## Cómo se usan
 
+**En una computadora nueva:** clona este repositorio, copia `.env.example` como `.env` y completa sus valores (llaves y `CARPETA_CLIENTES`). Las reglas comunes de llaves y carpetas están en `CONVENCIONES.md`.
+
 En Claude Code (app de escritorio, pestaña Code), abre un chat **en esta carpeta** y escribe `/`: aparecen `/01_mercado_estudio`, `/02_voz_de_marca`, etc. Cada comando vive en `.claude/commands/` y solo apunta a su receta de la raíz, así que **se edita la receta, nunca el comando**. Un chat por receta: todo lo que importa queda guardado en Partners, el siguiente chat no necesita recordar nada.
 
 ## Procesos activos (escriben en Supabase, influyen en Partners)
