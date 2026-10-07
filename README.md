@@ -2,6 +2,10 @@
 
 Procesos de Claude Desktop (slash-commands) que investigan mercado y planifican contenido a mano, con mucha supervisión humana — **nunca automatización ciega**, porque el mercado peruano no es confiable solo con datos scrapeados.
 
+## Cómo se usan
+
+En Claude Code (app de escritorio, pestaña Code), abre un chat **en esta carpeta** y escribe `/`: aparecen `/01_mercado_estudio`, `/02_voz_de_marca`, etc. Cada comando vive en `.claude/commands/` y solo apunta a su receta de la raíz, así que **se edita la receta, nunca el comando**. Un chat por receta: todo lo que importa queda guardado en Partners, el siguiente chat no necesita recordar nada.
+
 ## Procesos activos (escriben en Supabase, influyen en Partners)
 
 | Archivo | Qué hace | Tablas de Supabase |

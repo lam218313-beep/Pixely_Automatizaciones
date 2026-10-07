@@ -1,2 +1,4 @@
 .env
-.claude/
+# Configuración local de Claude Code; los comandos (/01_mercado_estudio, …) sí se comparten
+.claude/*
+!.claude/commands/
