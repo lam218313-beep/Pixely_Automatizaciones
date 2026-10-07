@@ -24,7 +24,7 @@ description: mercado_vigilancia
   - Cada post del competidor: Instagram `IGCP01` (competidor), `IGCP04` (texto), `IGCP06` (fecha y hora), `IGCP07` (likes), `IGCP08` (comentarios), `IGCP09` (interacciones), `IGCP10` (engagement), `IGCP11` (url) · reels `IGCR01`, `IGCR03`, `IGCR06`, `IGCR09`, `IGCR04` · Facebook `FBCP01`, `FBCP04`, `FBCP06`, `FBCP07`, `FBCP08`, `FBCP09`.
   - Si un ID cambió, `getAnalyticsAvailableMetrics(network, connector="competitors" | "competitor posts" | "competitor reels")` da la lista vigente.
   - **No cubre** TikTok, Google Maps ni la biblioteca de anuncios de Meta: para eso sigue Apify.
-- **Apify (vía API REST, no MCP)** — lo que Metricool no cubre: anuncios pagados (Meta Ad Library), TikTok, hashtags de nicho, y el respaldo de Instagram para un competidor que aún no está en Metricool. El token vive en `D:\ANTES_15_09_2026\0.-Publicidad_nivel_01\.agents\workflows\.env` (`APIFY_API_TOKEN=...`) — **este archivo nunca debe subirse a un repositorio ni compartirse**; si este proyecto se convierte en repo git en el futuro, agrégalo a `.gitignore` de inmediato. Cada llamada debe leer el valor de ese archivo (las variables de entorno no persisten entre llamadas de shell independientes). Actors confirmados y accesibles con este token:
+- **Apify (vía API REST, no MCP)** — lo que Metricool no cubre: anuncios pagados (Meta Ad Library), TikTok, hashtags de nicho, y el respaldo de Instagram para un competidor que aún no está en Metricool. El token vive en el `.env` de la carpeta de las recetas (`APIFY_API_TOKEN=...`, ver `.env.example`) — **este archivo nunca se sube al repositorio ni se comparte** (ya está en `.gitignore`). Cada llamada debe leer el valor de ese archivo (las variables de entorno no persisten entre llamadas de shell independientes). Actors confirmados y accesibles con este token:
   - `clockworks/tiktok-scraper` — perfiles de TikTok de competidores; `apify/instagram-scraper` — hashtags de nicho y respaldo de perfiles que no estén en Metricool.
   - `apify/facebook-ads-scraper` — Meta Ad Library: qué anuncios está pagando cada competidor **ahora mismo** en Facebook/Instagram. Esta es la señal más fuerte: un rival no paga por un ángulo que no le funciona.
 - **Bash (`curl`) contra la API REST de Supabase** — destino de los hallazgos estructurados (tabla `market_findings`), con nivel de confianza y tipo de señal, y fuente de la identidad/buyer del cliente (tablas `brand_identities` y `client_interviews`) y del estudio de génesis (`market_studies`). Mismo patrón que Apify: token leído del `.env` en cada llamada.
@@ -64,7 +64,7 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
      curl -s "$SUPABASE_URL/rest/v1/client_interviews?client_id=eq.<client_id>&select=data" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
-     `brand_identities` trae la **Voz de marca** (arquetipo y su razón, rasgos de tono con ejemplos, palabras que sí y que no, y si el cliente ya la aprobó en `voz_estado`); `client_interviews.data` trae las respuestas de la Entrevista de Partners, donde vive el buyer persona y la info comercial (qué se vende, a qué precio, a quién). Si alguna de estas filas no existe todavía para el cliente (no ha pasado por Entrevista/Manual en Partners), usa como fallback los archivos locales de siempre en `D:\ANTES_15_09_2026\0.-Publicidad_nivel_01\[nombre_del_cliente]\Inputs\docs\`:
+     `brand_identities` trae la **Voz de marca** (arquetipo y su razón, rasgos de tono con ejemplos, palabras que sí y que no, y si el cliente ya la aprobó en `voz_estado`); `client_interviews.data` trae las respuestas de la Entrevista de Partners, donde vive el buyer persona y la info comercial (qué se vende, a qué precio, a quién). Si alguna de estas filas no existe todavía para el cliente (no ha pasado por Entrevista/Manual en Partners), usa como fallback los archivos locales de siempre en `$CARPETA_CLIENTES/[nombre_del_cliente]/Inputs/docs/`:
      - `1.-identidad.md` (Quiénes somos)
      - `3.-inputs_comercial.md` (Qué vendemos exactamente y a qué precio)
      - `4.-buyer.md` (A quién se lo vendemos y qué le duele)
@@ -97,7 +97,7 @@ Si alguno de estos conectores no está activo, detente y pide al usuario que lo 
 
    - **C1. Perfil orgánico de respaldo (Apify)** — solo para TikTok, o para un competidor de Instagram que no esté en Metricool:
      ```bash
-     TOKEN=$(grep APIFY_API_TOKEN "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
+     TOKEN=$(grep -m1 '^APIFY_API_TOKEN=' .env | cut -d= -f2- | tr -d '\r')
      curl -s -X POST "https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=$TOKEN" \
        -H "Content-Type: application/json" \
        -d '{"directUrls": ["https://www.instagram.com/[handle_competidor]/"], "resultsLimit": 20}'

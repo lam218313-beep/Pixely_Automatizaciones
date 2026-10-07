@@ -9,7 +9,7 @@ description: mercado_estudio
 
 > **Cuándo usar esto vs. `/03_mercado_vigilancia`:** este proceso es el **génesis** — construye desde cero el universo de competidores, el dossier profundo y el tamaño de mercado de un cliente nuevo (existe o no existe todavía como negocio). `/03_mercado_vigilancia` es **mantenimiento continuo** — asume que ese universo ya existe (en `6.-fuentes.md` o en la fila de `market_studies` de este proceso) y lo usa para vigilancia competitiva recurrente. Si no existe todavía una fila en `market_studies` para este cliente, corre este proceso primero.
 
-> **Nota de fusión con Partners (Supabase):** este proceso se sigue operando a mano, en Claude Desktop, exactamente igual que hasta ahora — nadie lo automatiza sin supervisión, porque el mercado peruano no es confiable solo con datos scrapeados. Lo único que cambia es el destino final: el estudio ya no vive solo en un JSON local, también se escribe en la tabla `market_studies` de Supabase (proyecto `pixely_partners`, ref `zvpisdftltnukbozyuge`) para que el cliente lo vea dentro de la app de Partners, en la fase Mercado. Esto requiere dos variables nuevas en el mismo `.env` donde ya vive `APIFY_API_TOKEN` (`D:\ANTES_15_09_2026\0.-Publicidad_nivel_01\.agents\workflows\.env`, nunca subir este archivo a git):
+> **Nota de fusión con Partners (Supabase):** este proceso se sigue operando a mano, en Claude Desktop, exactamente igual que hasta ahora — nadie lo automatiza sin supervisión, porque el mercado peruano no es confiable solo con datos scrapeados. Lo único que cambia es el destino final: el estudio ya no vive solo en un JSON local, también se escribe en la tabla `market_studies` de Supabase (proyecto `pixely_partners`, ref `zvpisdftltnukbozyuge`) para que el cliente lo vea dentro de la app de Partners, en la fase Mercado. Esto requiere dos variables nuevas en el mismo `.env` donde ya vive `APIFY_API_TOKEN` (el `.env` de la carpeta de las recetas, ver `.env.example` y `CONVENCIONES.md`; nunca se sube a git):
 > ```
 > SUPABASE_URL=https://zvpisdftltnukbozyuge.supabase.co
 > SUPABASE_SERVICE_KEY=<service role key — en Railway (proyecto pixely-partners, servicio backend, pestaña Variables) es la variable que se llama literalmente SUPABASE_SERVICE_KEY, NO la variable SUPABASE_KEY (esa es la llave pública/anon, un valor distinto y mucho más restringido). Si hace falta copiarla de nuevo, está en Supabase → Project Settings → API → "Legacy anon, service_role API keys" → fila service_role, botón Reveal.>
@@ -55,8 +55,8 @@ Si algún actor de Apify no está en el plan del token, no adivines un actor alt
    - Crea `[Cliente]/Inputs/` y `[Cliente]/Outputs/` si no existen — esto sigue siendo la carpeta de trabajo local, independiente de Partners.
    - **Resuelve el `client_id` de Partners (obligatorio para la Fase 5):** este cliente debe existir ya en la tabla `clients` de Supabase (se crea desde el panel de Admin de Partners). Búscalo por nombre:
      ```bash
-     SUPABASE_URL=$(grep SUPABASE_URL "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
-     SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
+     SUPABASE_URL=$(grep -m1 '^SUPABASE_URL=' .env | cut -d= -f2- | tr -d '\r')
+     SUPABASE_KEY=$(grep -m1 '^SUPABASE_SERVICE_KEY=' .env | cut -d= -f2- | tr -d '\r')
      curl -s "$SUPABASE_URL/rest/v1/clients?nombre=ilike.*[nombre_del_cliente]*&select=id,nombre" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```

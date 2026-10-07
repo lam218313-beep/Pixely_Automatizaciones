@@ -17,8 +17,8 @@ description: estrategia
 
 Mismas variables `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` del `.env` que usan `/01_mercado_estudio` y `/03_mercado_vigilancia`:
 ```bash
-SUPABASE_URL=$(grep SUPABASE_URL "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
-SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nivel_01/.agents/workflows/.env" | cut -d= -f2)
+SUPABASE_URL=$(grep -m1 '^SUPABASE_URL=' .env | cut -d= -f2- | tr -d '\r')
+SUPABASE_KEY=$(grep -m1 '^SUPABASE_SERVICE_KEY=' .env | cut -d= -f2- | tr -d '\r')
 ```
 
 ---
