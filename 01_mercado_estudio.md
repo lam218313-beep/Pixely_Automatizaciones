@@ -20,7 +20,7 @@ description: mercado_estudio
 ---
 
 **Herramientas requeridas (conectores de Claude / APIs):**
-- **Metricool (conector de Claude)** — **fuente principal para Instagram y Facebook de la competencia**, estandarizada y sin créditos extra. Cada cliente es una **marca** en Metricool; su `brandId` es el `metricool_brand_id` de la Configuración de la marca en Partners (`brand_settings`; si falta, búscalo con `getBrandSettings` y pide guardarlo en Panel del equipo → marca → Configuración). Los competidores se agregan **a mano** en Metricool (marca del cliente → Competidores, en Instagram y Facebook); el conector solo los lee. Datos con `getAnalyticsDataByMetrics(brandId, from, to, metrics)`:
+- **Metricool (conector de Claude)** — **fuente principal para Instagram y Facebook de la competencia**, estandarizada y sin créditos extra. Cada cliente es una **marca** en Metricool; su `brandId` es el `metricool_brand_id` de la Configuración de la marca en Partners (`brand_settings`). **Si falta**, búscalo tú: `getBrandSettings` lista las marcas de Metricool; elige la que tenga `label` igual a `metricool_nombre` (sin importar mayúsculas ni tildes), confírmala con el usuario y guárdala con el `PATCH` de abajo (sección *Conectar la marca de Metricool*). Si tampoco hay `metricool_nombre`, pide completarlo en Panel del equipo → marca → Configuración. Los competidores se agregan **a mano** en Metricool (marca del cliente → Competidores, en Instagram y Facebook); el conector solo los lee. Datos con `getAnalyticsDataByMetrics(brandId, from, to, metrics)`:
   - Perfil por competidor: Instagram `IGCO02` (usuario), `IGCO07` (seguidores), `IGCO08` (posts), `IGCO12` (reels), `IGCO09` (likes prom.), `IGCO06` (comentarios), `IGCO10` (engagement por 1000 seguidores) · Facebook `FBCO02`, `FBCO06`, `FBCO07`, `FBCO08` (reacciones prom.), `FBCO05`, `FBCO09`, `FBCO10`.
   - Cada post del competidor: Instagram `IGCP01` (competidor), `IGCP04` (texto), `IGCP06` (fecha y hora), `IGCP07` (likes), `IGCP08` (comentarios), `IGCP09` (interacciones), `IGCP10` (engagement), `IGCP11` (url) · reels `IGCR01`, `IGCR03`, `IGCR06`, `IGCR09`, `IGCR04` · Facebook `FBCP01`, `FBCP04`, `FBCP06`, `FBCP07`, `FBCP08`, `FBCP09`.
   - Si un ID cambió, `getAnalyticsAvailableMetrics(network, connector="competitors" | "competitor posts" | "competitor reels")` da la lista vigente.
@@ -35,6 +35,13 @@ description: mercado_estudio
 - **Fuentes oficiales del sector** (INEI, PRODUCE, SUNAT, cámaras de comercio) — para la validación top-down del tamaño de mercado; se descargan con `curl -k` si el certificado SSL falla en `WebFetch`.
 - **reportlab + matplotlib + pymupdf** (skill nativa de PDF) — para el informe final.
 - **Bash (`curl`) contra la API REST de Supabase** — mismo patrón que Apify: token leído del `.env` en el momento de la llamada, nunca asumido en memoria entre pasos.
+
+**Conectar la marca de Metricool** (solo si `metricool_brand_id` está vacío y ya confirmaste la marca):
+```bash
+curl -s -X PATCH "$SUPABASE_URL/rest/v1/brand_settings?client_id=eq.<client_id>" \
+  -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY" \
+  -H "Content-Type: application/json" -d '{"metricool_brand_id": "<id de getBrandSettings>"}'
+```
 
 Si algún actor de Apify no está en el plan del token, no adivines un actor alternativo desconocido (quemarás créditos sin certeza del schema) — documenta el gap honestamente y sigue con las demás fuentes.
 

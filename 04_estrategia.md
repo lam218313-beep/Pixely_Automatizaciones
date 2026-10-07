@@ -52,7 +52,7 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
    - **Voz de marca** (`brand_identities`: `archetype`, `tone_traits`, `palabras_si`, `palabras_no`, `voz_estado`): los ganchos y textos de esta receta se escriben con esa voz y nunca usan `palabras_no`. Si no hay voz, o `voz_estado` no es `Aprobada`, avisa: lo ideal es correr antes `/02_voz_de_marca` y que el cliente la apruebe. Sigue solo si el usuario lo confirma.
    - **Volumen contratado:** `fotos_mes` y `reels_mes` de la **configuración de la marca en Partners** (`brand_settings`, la edita el equipo en Panel del equipo → marca → Configuración), la misma fuente que usa `/05_planificacion`:
      ```bash
-     curl -s "$SUPABASE_URL/rest/v1/brand_settings?client_id=eq.<client_id>&select=plan,fotos_mes,reels_mes,redes,metricool_brand_id,ciudad,rubro" \
+     curl -s "$SUPABASE_URL/rest/v1/brand_settings?client_id=eq.<client_id>&select=plan,fotos_mes,reels_mes,redes,metricool_brand_id,metricool_nombre,ciudad,rubro" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
      Si la fila no existe o le falta el volumen, usa de respaldo `[Cliente]/Inputs/docs/7.-plan_contratado.md` y pide completar la Configuración en Partners.

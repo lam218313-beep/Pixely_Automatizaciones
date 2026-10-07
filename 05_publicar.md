@@ -36,10 +36,10 @@ description: publicar_final
 2. **FASE 2: CONEXIÓN A METRICOOL Y HORA DE PUBLICACIÓN:**
    - `blogId`/`brandId` y redes: `metricool_brand_id` y `redes` de la Configuración de la marca en Partners (cada cliente es una marca en Metricool):
      ```bash
-     curl -s "$SUPABASE_URL/rest/v1/brand_settings?client_id=eq.<client_id>&select=plan,fotos_mes,reels_mes,redes,metricool_brand_id,ciudad,rubro" \
+     curl -s "$SUPABASE_URL/rest/v1/brand_settings?client_id=eq.<client_id>&select=plan,fotos_mes,reels_mes,redes,metricool_brand_id,metricool_nombre,ciudad,rubro" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
-     Si falta el id, búscalo con `getBrandSettings`, confírmalo con el usuario y pídele guardarlo en Partners (Panel del equipo → marca → Configuración). Toma de `getBrandSettings` la zona horaria de esa marca. Programa **solo** en las `redes` de la Configuración.
+     Si falta el id, búscalo con `getBrandSettings` (la marca cuyo `label` coincide con `metricool_nombre`), confírmalo con el usuario y guárdalo tú en `brand_settings` con un `PATCH` de `metricool_brand_id` (mismas cabeceras que el resto de escrituras). Toma de `getBrandSettings` la zona horaria de esa marca. Programa **solo** en las `redes` de la Configuración.
    - Hora: usa `getBestTimeToPostByNetwork` (Instagram/LinkedIn) para la semana de cada pieza y toma la mejor franja de ese día; si no hay datos, usa 13:00 hora del cliente. Una sola hora por pieza para todas sus redes, salvo que el usuario pida otra cosa.
 
 3. **FASE 3: PROGRAMACIÓN MULTIPLATAFORMA (`createScheduledPost`, programación directa):**

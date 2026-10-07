@@ -58,7 +58,7 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_KEY "D:/ANTES_15_09_2026/0.-Publicidad_nive
    - **Voz de marca** (`brand_identities`: `tone_traits`, `palabras_si`, `palabras_no`, `archetype`, `voz_estado`): los tópicos se redactan con esa voz y nunca usan `palabras_no`. Si la voz no está aprobada, avísalo.
    - **Volumen:** `fotos_mes` y `reels_mes` de la Configuración de la marca:
      ```bash
-     curl -s "$SUPABASE_URL/rest/v1/brand_settings?client_id=eq.<client_id>&select=plan,fotos_mes,reels_mes,redes,metricool_brand_id,ciudad,rubro" \
+     curl -s "$SUPABASE_URL/rest/v1/brand_settings?client_id=eq.<client_id>&select=plan,fotos_mes,reels_mes,redes,metricool_brand_id,metricool_nombre,ciudad,rubro" \
        -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
      ```
      Total de piezas = `fotos_mes + reels_mes`. Los formatos deben poder salir en las `redes` de la marca (ej. sin Instagram ni TikTok no hay Reels ni Estados).
