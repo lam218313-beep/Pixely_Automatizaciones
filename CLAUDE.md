@@ -29,7 +29,7 @@
 - Base de datos: Supabase, proyecto `zvpisdftltnukbozyuge` (plan gratis). Respaldo semanal automático en GitHub Actions → "Respaldo de la base" (repo pixely, `respaldo-base.yml`). Respaldos y cambio de llaves: `pixely/docs/respaldos-y-llaves.md`.
 - Computadora del equipo: todo vive en `D:\1.-Pixely` (Recetas con su `.env`, Clientes, 3.-Pixely_web, 4.-Pixely_data). `CARPETA_CLIENTES=D:/1.-Pixely/Clientes`.
 - Cuenta de equipo (admin) en Partners: lucia.ramos@pixely.pe (correo ficticio de @pixely.pe). Para más cuentas: Supabase → Authentication → Add user, y luego marcarlas como equipo.
-- Contacto de marca: WhatsApp +51 949 268 607 · hola@pixely.pe · @pixely_pe · pixely.pe. Razón social: Syntesia Labs E.I.R.L., RUC 20616010787.
+- Contacto de marca: WhatsApp +51 949 268 607 · hola@pixely.pe · @pixely_pe · pixely.pe. Razón social: Syntesia Labs E.I.R.L., RUC 20616010787. La atención presencial es en Trujillo (no en Lima).
 
 ## La matriz (plan de lanzamiento)
 - Google Sheet "Pixely - Plan de lanzamiento", id `133jcpfOmlQTzljDxH7S0Sz69sJzFnrdXafCZubNaT6E`, pestaña Tareas (sheetId 1462445922).
