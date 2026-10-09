@@ -28,7 +28,7 @@
 
 - Base de datos: Supabase, proyecto `zvpisdftltnukbozyuge` (plan gratis). Respaldo semanal automático en GitHub Actions → "Respaldo de la base" (repo pixely, `respaldo-base.yml`). Respaldos y cambio de llaves: `pixely/docs/respaldos-y-llaves.md`.
 - Computadora del equipo: todo vive en `D:\1.-Pixely` (Recetas con su `.env`, Clientes, 3.-Pixely_web, 4.-Pixely_data). `CARPETA_CLIENTES=D:/1.-Pixely/Clientes`.
-- Cuenta de equipo (admin) en Partners: lucia.ramos@pixely.pe (correo ficticio de @pixely.pe). Para más cuentas: Supabase → Authentication → Add user, y luego marcarlas como equipo.
+- Cuenta de equipo (admin) en Partners: lucia.ramos@pixely.pe (correo ficticio de @pixely.pe). Para más cuentas: Supabase → Authentication → Add user, y luego marcarlas como equipo. Los clientes entran con su correo @pixely.pe y la contraseña que se les da en el alta (sin código por correo; ese correo no recibe mensajes).
 - Contacto de marca: WhatsApp +51 949 268 607 · hola@pixely.pe · @pixely_pe · pixely.pe. Razón social: Syntesia Labs E.I.R.L., RUC 20616010787. La atención presencial es en Trujillo (no en Lima).
 
 ## La matriz (plan de lanzamiento)
@@ -47,7 +47,7 @@
   - F1-9: cambiar las llaves antes del primer cliente real. Lo hace la persona siguiendo `docs/respaldos-y-llaves.md`; las llaves no pasan por el chat.
   - Subir a Drive los PDF nuevos. El conector de Drive no sube archivos grandes, así que la persona los arrastra a las carpetas del kit (1. Tarjetas y QR, 2. Brochure y presentaciones, 3. Planes, 4. Manuales).
   - Completar las variables de Supabase en el `.env` de Recetas, en la computadora del equipo.
-  - En la matriz: F4-1 (oferta de publicidad pagada), F2-4 y F2-5 (cuentas publicitarias y medición en pixely.pe), la línea de base de datos (F3) y F2-8. F1-4 y F1-5 están bloqueadas.
+  - En la matriz: F4-1 (oferta de publicidad pagada), F2-4 y F2-5 (cuentas publicitarias y medición en pixely.pe), la línea de base de datos (F3) y F2-8. F1-4 está bloqueada.
 
 ## Cómo se hacen las cosas
 - Ramas: en pixely y Pixely_web se trabaja en una rama, se fusiona a main con `git merge --no-ff` (mensaje "Fusionar <rama>") y se sube main; Vercel publica solo. pixely_marca y pixely_automatizaciones van directo a main.
