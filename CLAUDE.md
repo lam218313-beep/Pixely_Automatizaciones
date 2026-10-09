@@ -2,7 +2,7 @@
 
 **Este repo:** las recetas que producen el trabajo de cada cliente. Reglas comunes en `CONVENCIONES.md`; cada receta se usa como comando (`/01_mercado_estudio`, etc.).
 
-> Este archivo es igual en los 4 repos de Pixely (pixely, Pixely_web, pixely_marca y pixely_automatizaciones), salvo la línea "Este repo". Si cambias algo, cámbialo en los cuatro. Última actualización: 8 oct 2026.
+> Este archivo es igual en los 4 repos de Pixely (pixely, Pixely_web, pixely_marca y pixely_automatizaciones), salvo la línea "Este repo". Si cambias algo, cámbialo en los cuatro. Última actualización: 9 oct 2026.
 
 ## Con quién trabajas
 - Quien dirige Pixely es PM y no programa. Responde siempre en español, en palabras simples y con analogías cotidianas. Si usas un término técnico, explícalo.
@@ -41,7 +41,7 @@
 ## Estado al 8 oct 2026
 - Partners funciona en producción con la interfaz nueva (orbes de carga, foco de un borde, mazo ligero, entrada animada) y el panel del equipo con alta de cliente guiada.
 - Kit de lanzamiento listo y aprobado (rehecho el 8 oct): brochure, 3 planes, manual de Partners, tarjeta para imprenta, QR y 2 videos de prueba. pixely.pe muestra capturas actuales de la app.
-- Descartado (no volver a proponer): guía rápida de una página; plantillas de propuesta, contrato y firma de correo; portadas y plantillas de redes; caso de éxito; repositorios de animaciones y de imágenes; manual de marca (queda solo el catálogo); el nombre Radar; la receta 06; más videos.
+- Descartado (no volver a proponer): guía rápida de una página; plantillas de propuesta, contrato y firma de correo; caso de éxito; repositorios de animaciones y de imágenes; manual de marca (queda solo el catálogo); el nombre Radar; la receta 06; más videos.
 - Líneas de venta: vendedores por comisión, venta por data (mensajes y llamadas) y venta directa con anuncios en redes. Todas usan el kit. El proceso de venta está en Drive: "Pixely - Proceso de venta" (carpeta 8. Estrategia y marketing). Lo que hay que habilitar para cada línea todavía no se ha contado: no lo supongas.
 - Pendiente:
   - F1-9: cambiar las llaves antes del primer cliente real. Lo hace la persona siguiendo `docs/respaldos-y-llaves.md`; las llaves no pasan por el chat.
@@ -53,5 +53,6 @@
 - Ramas: en pixely y Pixely_web se trabaja en una rama, se fusiona a main con `git merge --no-ff` (mensaje "Fusionar <rama>") y se sube main; Vercel publica solo. pixely_marca y pixely_automatizaciones van directo a main.
 - PDF del kit (pixely_marca): cada pieza es `pdf/<pieza>/index.html` sobre la base común `pdf/comun/base.css`. `npm run pdf` (o `npm run pdf brochure`) los genera en `public/piezas/pdf` y avisa si algo se sale de la hoja. Antes de entregar, revisa el PDF como imagen. Estilo: páginas negras y blancas, rosa #EB0C6E solo de acento, Unbounded en títulos y Manrope en texto.
 - Capturas de la app (para la web y el manual): en `pixely/frontend/app`, `VITRINA=1 npx playwright test vitrina --project=android` (marca de ejemplo Casa Norte); luego, en Pixely_web, `npm run vitrina`.
+- Elementos gráficos (pixely_marca: `elementos/elementos.json`, página «Elementos gráficos» del catálogo): los documentos solo usan elementos aprobados, con sus reglas. Primero se terminan los elementos; después cada documento se arma página por página, con aprobación de cada página.
 - Catálogo de componentes: `node componentes/scripts/build.mjs` en pixely_marca genera `componentes/artifact/index.html`, que se vuelve a publicar en el artifact.
 - Pruebas: app de Partners con `npm run test:e2e` (en `frontend/app`); web con `npm test` y `npx playwright test`. En la nube, Chrome está en `/opt/pw-browsers` (ver el `playwright.config` de cada repo).
