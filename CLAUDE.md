@@ -2,7 +2,7 @@
 
 **Este repo:** las recetas que producen el trabajo de cada cliente. Reglas comunes en `CONVENCIONES.md`; cada receta se usa como comando (`/01_mercado_estudio`, etc.).
 
-> Este archivo es igual en los 4 repos de Pixely (pixely, Pixely_web, pixely_marca y pixely_automatizaciones), salvo la línea "Este repo". Si cambias algo, cámbialo en los cuatro. Última actualización: 9 oct 2026.
+> Este archivo es igual en los 4 repos de Pixely (pixely, Pixely_web, pixely_marca y pixely_automatizaciones), salvo la línea "Este repo". Si cambias algo, cámbialo en los cuatro. Última actualización: 10 oct 2026.
 
 ## Con quién trabajas
 - Quien dirige Pixely es PM y no programa. Responde siempre en español, en palabras simples y con analogías cotidianas. Si usas un término técnico, explícalo.
@@ -11,7 +11,8 @@
 
 ## Reglas fijas
 - Solo los nombres "Pixely" y "Pixely Partners". Nunca "Radar": se dice "Mercado" o "estudio de mercado".
-- En textos para clientes no se dice "IA". En piezas de captación no van precios.
+- **Fuente única de verdad del negocio** (planes, campaña, precios, proceso, vendedores): `documento-integral.md` en pixely_marca. Si algo cambia, se cambia ahí primero y después en web, PDF, recetas y manuales.
+- En textos para clientes no se dice "IA". Los precios van en pixely.pe y en los PDF de planes («al mes, más IGV»); no van en el brochure ni en las piezas para redes.
 - Nunca prometer ventas. Se usa: "Los resultados pueden variar según el negocio, el sector y la constancia en la publicación".
 - Las llaves y contraseñas no se comparten por chat, no se escriben en archivos y no se suben a los repos (tampoco la llave de firma de las apps). Si alguien pega una, no la repitas y recomienda cambiarla.
 - Confirma antes de borrar o de hacer algo difícil de deshacer (base de datos, archivos, filas de la matriz), salvo que te lo pidan de forma explícita.
